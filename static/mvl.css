@@ -1,0 +1,67 @@
+body {
+    /*background-color: #222222;*/
+}
+
+.glass-background {
+    color: white;
+    background-color: #377BB5;
+    background-image: url("/static/glass-tile-strip.jpg");
+    background-repeat: repeat-y;
+    background-position: right;
+}
+
+.jtron {
+    padding-top: 100px;
+    padding-left: 70px;
+    padding-bottom: 70px;
+    margin: 0px;
+}
+
+.section-header {
+    padding-left: 70px;
+    padding-top: 20px;
+    padding-bottom: 30px;
+}
+
+.section {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    min-height: 500px;
+}
+
+#event-graph {
+    /* border: 1px solid lightgray; */
+    width: 100%;
+    height: 400px;
+}
+
+.Change {
+    font-weight: bold;
+    color: #5cb85c;
+}
+
+.Decrease {
+    font-weight: bold;
+    color: #337ab7;
+}
+
+.Increase {
+    font-weight: bold;
+    color: #d9534f;
+}
+
+h2, h3, h4 {
+    color: #377BB5
+}
+
+/* http://stackoverflow.com/questions/34902727/scrollspy-in-flask-bootstrap-not-working-jinja2
+
+body {
+    position: relative;
+    min-height: 2000px;
+    padding-top: 70px;
+}
+*/
+.popover{
+    max-width: 75%; /* Max Width of the popover (depending on the container!) */
+}

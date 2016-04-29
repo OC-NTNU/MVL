@@ -1,0 +1,382 @@
+{% extends "bootstrap/base.html" %}
+{% import "macros.html" as macros %}
+
+
+<!-- TODO: clear up JS/CSS loading mess -->
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='query-builder.default.min.css')}}">
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='jquery.dataTables.min.css')}}">
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='dataTables.bootstrap.min.css')}}">
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='select.bootstrap.min.css')}}">
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='vis.css')}}">
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='mvl.css')}}">
+{% endblock %}
+
+
+{% block scripts %}
+{{super()}}
+<script src="{{url_for('.static', filename='query-builder.standalone.min.js')}}"></script>
+<script src="{{url_for('.static', filename='bootbox.min.js')}}"></script>
+<script src="{{url_for('.static', filename='jquery.dataTables.min.js')}}"></script>
+<script src="{{url_for('.static', filename='dataTables.bootstrap.min.js')}}"></script>
+<script src="{{url_for('.static', filename='dataTables.select.min.js')}}"></script>
+<script src="{{url_for('.static', filename='vis.min.js')}}"></script>
+
+<script type=text/javascript>
+    $EVENT_TYPE_URL = "{{url_for('event_types')}}";
+    $EVENT_INST_URL = "{{url_for('event_inst')}}";
+    $RELATION_TYPE_URL = "{{url_for('relation_types')}}";
+    $RELATION_INST_URL = "{{url_for('relation_inst')}}";
+</script>
+<script src="{{url_for('.static', filename='mvl.js')}}"></script>
+{% endblock %}
+
+
+{% block title %}mvl{% endblock %}
+
+{% block body_attribs %}
+{{super()}}
+data-spy="scroll" data-target=".navbar" data-offset="10"
+{% endblock %}
+
+
+{% block navbar %}
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!--
+            <a class="navbar-brand" href="#">MVL</a>
+            -->
+        </div>
+        <div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li><a href="#header-event-1">Event 1</a></li>
+                    <li><a href="#header-event-2">Event 2</a></li>
+                    <li><a href="#header-relation-1">Relation</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#header-help">Help</a></li>
+                    <li><a href="#header-about">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="jumbotron jtron glass-background">
+    <h1>Marine Variables Linker</h1>
+    <p class="lead">Find relations between changing variables in marine science
+        literature</p>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12" style="padding: 70px">
+
+        </div>
+    </div>
+</div>
+</div>
+
+{{ macros.header("header-event-1", "Event 1") }}
+
+{{ macros.event("1") }}
+
+
+{{ macros.header("header-event-2", "Event 2") }}
+
+{{ macros.event("2") }}
+
+
+{{ macros.header("header-relation-1", "Relation") }}
+
+{{ macros.relation("1") }}
+
+
+{{ macros.header("header-help", "Help") }}
+
+<div class="container-fluid section">
+    <div class="row">
+        <div class="col-md-6 col-lg-5 col-lg-offset-1">
+            <h2>1. Introduction</h2>
+
+            <p>
+                The Marine Variable Linker helps you to find related events in
+                marine science literature.
+                The current demo system searches in about ten thousand abstracts
+                from <a href="http://www.nature.com/siteindex/index.html">
+                journals</a> by Nature Publishing Group, including Nature.
+                It can find three types of events:
+            </p>
+
+            <ul>
+                <li>variables that are <strong>increasing</strong></li>
+                <li>variables that are <strong>decreasing</strong></li>
+                <li>variables that are <strong>changing</strong> into an
+                    unspecified direction
+                </li>
+            </ul>
+
+            <p>For example, the following sentence contains two events:</p>
+
+            <blockquote>
+                <samp>
+                    <span class="Increase">The increase of greenhouse gasses</span>
+                    causes
+                    <span class="Decrease">a decline of Artic sea ice</span>.
+                </samp>
+            </blockquote>
+
+            <p>
+                The first event is a <i>increase</i> of the variable
+                <i>greenhouse gasses</i> (marked in red).
+                The second event is a <i>decrease</i> of the variable <i>Artcic
+                sea ice</i> (marked in blue).
+            </p>
+
+            <p>
+                Events can be related to each other. In the example above,
+                the two events co-occur together in the same sentence,
+                so there exists a <strong>co-occurrence relation</strong>
+                between them.
+                If two changing variables co-occur frequently in text,
+                this usually indicate that there is some connection between
+                them.
+            </p>
+
+            <p>
+                In the above example, there is in fact a <b>causal relation</b>
+                between the two events, as indicated by the use of the verb
+                <i>causes</i>.
+                The current version of the Marine Variables Linker can not
+                detect this relation yet, but future versions will be enable
+                searching for causal relations, correlations and feedbacks.
+            </p>
+
+            <h2>2. Searching for events</h2>
+
+            <p>
+                Click on <i>Event1</i> in menu bar at the top.
+                This brings you to the section for Event 1.</p>
+
+            <h4>Query</h4>
+
+            <p>
+                In the panel titled <i>Query</i> you can compose a query
+                to search for events.
+                Each query consists of one or more <i>rules</i>.
+                A rule has a combination of drop-down lists and text boxes
+                for its three parts:
+            </p>
+
+            <ol>
+                <li>subject</li>
+                <li>predicate</li>
+                <li>value</li>
+            </ol>
+
+            <p>
+                For example, you can select <i>variable</i>> as the subject, <i>contains
+                word</i> as the predicate and <i>iron</i> as the value, to
+                search
+                for all events involving a variable containing the word
+                <i>iron</i>.
+            </p>
+
+            <p>
+                You can click the green <i>Add rule</i> button to add
+                more rules, or on the red <i>Delete</i> button to
+                remove rules from the query.
+                For example, you can additionally restrict events to only those
+                of type <i>decrease</i>.
+            </p>
+
+            <h4>Event types</h4>
+
+            <p>
+                Once the query is finished, click on the <i>Search</i> button.
+                This will bring up a new panel titled <i>Event types</i>
+                that shows all types of eveny matching the query.
+                It contains a table showing the event counts, types and
+                variables.
+                You can browse through multiple pages (if the table is long
+                enough) or sort on the columns.
+                Note that there is maximimum to the number of event types shown
+                (currently 500).
+            </p>
+
+
+            <h4>Event instances</h4>
+
+            <p>Cliking on an event type in the table will bring up the
+                <i>Event instances</i> panel that shows all the actual instances
+                of this type. Each row in the table shows a sentence,
+                year of publication and source. The event is marked in color;
+                red for increasing, blue for decreasing and green for changing.
+                Hovering the mouse over <span
+                        class="glyphicon glyphicon-file"></span>
+                icon will show a citation for the source article.
+                Clicking on this icon will open the article containing the
+                sentence in a new window.
+                Note that in the case of a full text article, your need to have
+                access rights to view it.
+            </p>
+
+            <p>Click on the <i>Reset</i> button to start a new search. </p>
+
+        </div>
+
+        <div class="col-md-6 col-lg-5">
+
+
+            <h2>3. Searching for relations</h2>
+
+            <p>
+                In order to search for relations between events, you first
+                need to define queries for Event 1 and Event 2.
+                Then click on <i>Relation</i> in the meny bar at the top,
+                which brings you to the section for relations.
+            </p>
+
+            <h4>Query</h4>
+
+            <p>
+                In the panel titled <i>Query</i> you can compose a query
+                to search for relations.
+                This works in the similar way as for events.
+                A query consist of one or more rules, where each rule
+                specifies restrictions on the relation.
+                Note that currently only co-occurrence relations are supported.
+            </p>
+
+            <h4>Relation types</h4>
+
+            <p>
+                Clicking on the <i>Search</i> button will bring up two new
+                panels.
+                The first panel is titled <i>Relation types</i> and contains a
+                table with all pairs of event types in the given relation(s),
+                specifying counts, relation types, event types and variables.
+            </p>
+
+            <p>
+                The second panel, called <i>Relation graph</i>, display the same
+                event types in the form of a graph.
+                The nodes are event types with red triangles for increasing
+                variables, blue triangles for decreasing variables and green
+                diamonds for changing variables.
+                Edges indicate relations between events, where the thickness
+                of the edge represents the relative frequency of the relation.
+            </p>
+
+            <p>
+                Your view on the graph can be changed using the mouse.
+                Click and drag on nodes to move them around.
+                Click and drag on the cavas to move the whole graph.
+                Use the mouse wheel the zoom in or out.
+            </p>
+
+            <h4>Relation instances</h4>
+
+            <p>
+                To see the corresponding relation instances, either click on a
+                row in the relation types tables or click on an edge in the
+                relation graph.
+                This will open up a new panel called <i>Relation instances</i>,
+                showing sentences, years and sources containing the give
+                relation.
+                The events are marked in color;
+                red for increasing, blue for decreasing and green for changing.
+                Hovering the mouse over <span
+                    class="glyphicon glyphicon-file"></span>
+                icon will show a citation for the source article.
+                Clicking on this icon will open the article containing the
+                sentence in a new window.
+                Note that in the case of a full text article, your need to have
+                access rights to view it.
+            </p>
+
+            <p>
+                Note that the query for either event can be left unspecified
+                to perform an open ended search. Click on the <i>Reset</i>
+                button to start a new search.
+            </p>
+        </div>
+    </div>
+</div>
+
+{{ macros.header("header-about", "About") }}
+
+<div class="container-fluid section">
+    <div class="row">
+        <div class="col-md-6 col-lg-5 col-lg-offset-1">
+            <h2>Credits</h2>
+
+            <p>The Marine Variable Linker has been developed
+                at <a href="http://www.ntnu.edu/idi">Department of Computer and
+                    Information Science</a>
+                of the <a href="http://www.ntnu.no" target="_blank">Norwegian
+                    University of Science and Technology (NTNU)</a></li>
+                within the <a href="http://oceancertain.eu">Ocean Certain</a>
+                project, Work Package 1: Data Mining and Knowledge Discovery.
+                Financial aid from the European Commission (OCEAN-CERTAIN,
+                FP7-ENV-2013-6.1-1; no: 603773) is gratefully acknowledged.
+            </p>
+
+            <img src="{{url_for('.static', filename='img/oc_logo.png')}}"
+                 class="img-responsive center-block" style="max-width: 75%">
+        </div>
+
+        <div class="col-md-6 col-lg-5">
+            <h2>Contact</h2>
+
+            <p>For more information, please contact For more information
+                regarding text mining please contact Erwin Marsi
+                (<a href="mailto:emarsi@idi.ntu.no" target="_top">emarsi@idi.ntnu.no</a>)
+                or Pinar Øzturk
+                (<a href="mailto:pinar@idi.ntu.no" target="_top">pinar@idi.ntnu.no</a>)
+                at the
+                Norwegian
+                University of Science and Technology (NTNU).
+                For questions about
+                <a href="http://oceancertain.eu/">Ocean-Certain</a>
+                in general, contact Murat Van Ardalan
+                (<a href="mailto:murat.v.ardelan@ntnu.no"
+                    target="_top">murat.v.ardelan@ntnu.no</a>).
+                <img src="{{url_for('.static', filename='img/logo_ntnu.png')}}"
+                     class="img-responsive center-block"
+                     style="max-width: 50%; padding: 32px;">
+
+            </p>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="jumbotron jtron glass-background">
+
+
+</div>
+
+{% endblock %}
