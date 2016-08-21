@@ -2,41 +2,59 @@
 interface to neo4j graph database
 """
 
-
 import logging
+
 log = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s: %(module)s.%(funcName)s: %(lineno)d\n%(message)s')
+formatter = logging.Formatter(
+    '%(levelname)s: %(module)s.%(funcName)s: %(lineno)d\n%(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 # enable logging here
-#log.setLevel(logging.DEBUG)
+# log.setLevel(logging.DEBUG)
 log.setLevel(logging.ERROR)
 
-from py2neo import Graph
+from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, RELATION_TYPE_QUERY, \
+    RELATION_INST_QUERY
 
-from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, RELATION_TYPE_QUERY, RELATION_INST_QUERY
+from flask import current_app as app
 
-GRAPH = Graph('http://neo4j:nature@localhost:47470/db/data/')
+from neo4j.v1 import CypherError
 
 
+def run_query(query):
+    log.debug(query)
+
+    try:
+        session = app.config['NEO4J_DRIVER'].session()
+    except Exception as err:
+        # e.g. socket.gaierror
+        log.error(err)
+        raise err
+
+    try:
+        result = session.run(query)
+    except CypherError as err:
+        log.error(err)
+        raise err
+        # TODO: raised exception should ultimately results in a 500 response
+    finally:
+        session.close()
+
+    # wrap result generator to allow logging
+    for record in result:
+        log.debug(record)
+        yield record
 
 
 def get_event_types(rules):
     query = EVENT_TYPE_QUERY.format(parse_group(rules, 've'))
-    log.debug(query)
-    response = GRAPH.cypher.post(query)
-    result = reclist2obj(response.content)
-    log.debug(result)
-    return result
+    return run_query(query)
 
 
 def get_event_inst(node_ids):
     query = EVENT_INST_QUERY.format(node_ids)
-    log.debug(query)
-    result = GRAPH.cypher.execute(query)
-    log.debug(result)
-    return result
+    return run_query(query)
 
 
 def get_relation_types(rules):
@@ -45,44 +63,12 @@ def get_relation_types(rules):
                 parse_group(rules['relation'], 'r')]
     where = ' AND\n    '.join(operands)
     query = RELATION_TYPE_QUERY.format(where)
-    log.debug(query)
-    response = GRAPH.cypher.post(query)
-    result = reclist2obj(response.content)
-    log.debug(result)
-    return result
+    return run_query(query)
 
 
 def get_relation_inst(node_ids):
-    log.debug('')
     query = RELATION_INST_QUERY.format(id1=node_ids[0], id2=node_ids[1])
-    log.debug(query)
-    result = GRAPH.cypher.execute(query)
-    log.debug(result)
-    return result
-
-
-def reclist2obj(record_list):
-    """
-    Convert Neo4py RecordList to a list of 'Javascript objects'
-    for consumption by DataTables
-
-    Example output:
-
-    [{u'event1': u'Increase',
-      u'event2': u'Decrease',
-      u'nodeId1': 70270,
-      u'nodeId2': 76396,
-      u'relation': u'COOCCURS',
-      u'relationCount': 3,
-      u'relationId': 110822,
-      u'variable1': u'temperature',
-      u'variable2': u'temperature'},
-      ...
-    ]
-    """
-    keys = record_list['columns']
-    return [dict(zip(keys, record))
-            for record in record_list['data']]
+    return run_query(query)
 
 
 # parse query-builder rules
@@ -128,8 +114,9 @@ def parse_rule(rule, neo4j_id):
         elif 'begins_with_word' in operator:
             operand_str = r'{}.subStr =~ "^{}(\\W.*|$)"'.format(neo4j_id, value)
         elif 'contains_word' in operator:
-            operand_str = r'{}.subStr =~ "(^|.*\\W){}(\\W.*|$)"'.format(neo4j_id,
-                                                                        value)
+            operand_str = r'{}.subStr =~ "(^|.*\\W){}(\\W.*|$)"'.format(
+                neo4j_id,
+                value)
         elif 'ends_with_word' in operator:
             operand_str = r'{}.subStr =~ "(^|.*\\W){}$"'.format(neo4j_id, value)
         elif 'begins_with_string' in operator:

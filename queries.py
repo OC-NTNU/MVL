@@ -111,7 +111,7 @@ RELATION_INST_QUERY = '''
 MATCH
     (ve1:VarEvent) -[:INST]-> (e1:Event) <-[:HAS_EVENT]- (s:Sentence)
     -[:HAS_EVENT]-> (e2:Event) <-[:INST]- (ve2:VarEvent),
-    s <-[:HAS_SENT]- (a:Article)
+    (s) <-[:HAS_SENT]- (a:Article)
 WHERE
     id(ve1) = {id1} AND id(ve2) = {id2}
 WITH
