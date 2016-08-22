@@ -42,8 +42,8 @@ app.config.from_pyfile('mvl.cfg')
 def init_neo4j_connection(app):
     server_url = app.config.get('NEO4J_URL', 'bolt://localhost:7687')
     encrypted = app.config.get('NEO4J_ENCRYPTED', True)
-    password = app.config.get('NEO4J_USER', 'neo4j')
-    user = app.config.get('NEO4J_PASSWORD')
+    user = app.config.get('NEO4J_USER', 'neo4j')
+    password = app.config.get('NEO4J_PASSWORD')
 
     auth = basic_auth(user, password) if password else None
     driver = GraphDatabase.driver(server_url,
