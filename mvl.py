@@ -10,9 +10,13 @@ from neo4j.v1 import GraphDatabase, basic_auth
 
 # SOURCE_LINK = ' '.join(u'''
 # <a target="_blank"
-#    href="http://dx.doi.org/{row.doi}"
-#    title='In: {row.author}, "{row.title}", {row.journal}:{row.volume}, {row.year}.'>
-#     <span class="glyphicon glyphicon-file"></span>
+#    href="http://dx.doi.org/{row[doi]}"
+#    data-toggle="popover"
+#    data-trigger="hover"
+#    data-placement="left"
+#    data-title="{row[title]}"
+#    data-content="{row[author]},<br><br> {row[journal]}:{row[volume]}, {row[year]}."
+#    <span class="glyphicon glyphicon-file"></span>
 # </a>
 # '''.split())
 
@@ -22,11 +26,12 @@ SOURCE_LINK = ' '.join(u'''
    data-toggle="popover"
    data-trigger="hover"
    data-placement="left"
-   data-title="{row[title]}"
-   data-content="{row[author]},<br><br> {row[journal]}:{row[volume]}, {row[year]}."
+   data-title="TITLE"
+   data-content="{row[citation]}"
    <span class="glyphicon glyphicon-file"></span>
 </a>
 '''.split())
+
 
 EVENT = ' '.join(u'''
 span class="{event}"
