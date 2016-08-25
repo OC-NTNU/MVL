@@ -26,7 +26,6 @@ SOURCE_LINK = ' '.join(u'''
    data-toggle="popover"
    data-trigger="hover"
    data-placement="left"
-   data-title="TITLE"
    data-content="{row[citation]}"
    <span class="glyphicon glyphicon-file"></span>
 </a>

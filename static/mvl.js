@@ -242,8 +242,10 @@ function showEventInstances(data, id) {
         // FIXME: this is legacy, but drawCallback is not called
         fnDrawCallback: function (oSettings) {
             $("[data-toggle=popover]").popover(
-                {html: true,
-                 container: 'body'});
+                {
+                    html: true,
+                    container: 'body'
+                });
         },
         drawCallback: function (settings) {
             console.log("DrawCallback")
@@ -354,17 +356,21 @@ function showRelationTypes(data, id) {
             {data: 'event1', title: 'Event1', width: "10%"},
             {data: 'variable1', title: 'Variable1'},
             {data: 'event2', title: 'Event2', width: "10%"},
-            {data: 'variable2', title: 'Variable2'} //,
-            // {data: 'nodeId1', name: 'nodeId1', title: 'nodeId1'},
-            // {data: 'nodeId2', name: 'nodeId2', title: 'nodeId2'},
-            // {data: 'relationId', name: 'relId', title: 'relId'}
+            {data: 'variable2', title: 'Variable2'},
+            //{data: 'nodeId1', name: 'nodeId1', title: 'nodeId1'},
+            //{data: 'nodeId2', name: 'nodeId2', title: 'nodeId2'},
+            //{data: 'relationId', name: 'relId', title: 'relId'}
         ],
         rowId: 'relationId'
     });
     $('#types-panel-relation-' + id).scrollView();
 
     table.on('select', function (e, dt, type, indexes) {
-        var row = table.row(indexes[0]).data();
+        // For some reason, this does not work:
+        //     var row =  table.row(indexes[0]).data();
+        // so we do this instead:
+        var t = $('#types-table-relation-' + id).DataTable();
+        var row = t.row(indexes[0]).data();
         var pay_load = {node_ids: [row.nodeId1, row.nodeId2]};
         $.ajax({
             url: $RELATION_INST_URL,
@@ -396,8 +402,10 @@ function showRelationInstances(data, status, id) {
         // FIXME: this is legacy, but drawCallback is not called
         fnDrawCallback: function (oSettings) {
             $("[data-toggle=popover]").popover(
-                {html: true,
-                 container: 'body'});
+                {
+                    html: true,
+                    container: 'body'
+                });
         },
     });
 
@@ -515,13 +523,18 @@ function showGraph(data, id) {
         }
 
         // add edge
-        edges.add({
-            id: record.relationId,
-            from: record.nodeId1,
-            to: record.nodeId2,
-            value: record.relationCount,
-            title: record.relation
-        })
+        try {
+            edges.add({
+                id: record.relationId,
+                from: record.nodeId1,
+                to: record.nodeId2,
+                value: record.relationCount,
+                title: record.relation,
+                //label: record.relationId
+            })
+        }
+        catch (ex) { // edge already exists - should not happen?
+        }
     });
 
     var container = document.getElementById('event-graph');
