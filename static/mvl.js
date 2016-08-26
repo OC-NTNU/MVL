@@ -38,6 +38,7 @@ var event_options = {
     ],
     default_filter: 'variable',
     display_empty_filter: false,
+    allow_empty: true,
     plugins: {
         //'bt-tooltip-errors': {delay: 100},
         //'sortable': null,
@@ -202,7 +203,7 @@ function showEventTypes(data, id) {
         data: data.responseJSON,
         columns: [
             {data: 'eventCount', title: 'Count', width: "10%"},
-            {data: 'event', title: 'Event', width: "20%"},
+            {data: 'event', title: 'Predicate', width: "20%"},
             {data: 'variable', title: 'Variable'} //,
             //{data: 'nodeId', title: 'Id'}
         ]
@@ -291,6 +292,7 @@ var relation_options = {
             description: 'restrict the type of relation'
         }
     ],
+    allow_empty: true,
     default_filter: 'cooccurrence',
     display_empty_filter: false,
     plugins: {
@@ -353,9 +355,9 @@ function showRelationTypes(data, id) {
         columns: [
             {data: 'relationCount', title: 'Count', width: "5%"},
             {data: 'relation', title: 'Relation', width: "10%"},
-            {data: 'event1', title: 'Event1', width: "10%"},
+            {data: 'event1', title: 'Predicate1', width: "10%"},
             {data: 'variable1', title: 'Variable1'},
-            {data: 'event2', title: 'Event2', width: "10%"},
+            {data: 'event2', title: 'Predicate2', width: "10%"},
             {data: 'variable2', title: 'Variable2'},
             //{data: 'nodeId1', name: 'nodeId1', title: 'nodeId1'},
             //{data: 'nodeId2', name: 'nodeId2', title: 'nodeId2'},
@@ -600,6 +602,7 @@ $.fn.scrollView = function () {
  * Development
  ***********************************************************************/
 
+/*
 
 $('#builder-event-2').queryBuilder('setRules', {
     'rules': [{
@@ -637,6 +640,7 @@ $('#builder-relation-1').queryBuilder('setRules', {
     'condition': 'AND'
 });
 
+*/
 
 $(document).ready(function () {
     $('[data-toggle="popover"]').popover();
