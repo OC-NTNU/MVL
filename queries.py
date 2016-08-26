@@ -8,6 +8,8 @@ Cypher queries
 EVENT_TYPE_QUERY = '''
 MATCH
     (ve:VarEvent)
+WHERE
+    {}
 WITH
     ve.n AS eventCount,
     CASE
@@ -17,8 +19,6 @@ WITH
     END AS event,
     ve.subStr AS variable,
     id(ve) AS nodeId
-WHERE
-    {}
 RETURN
     eventCount,
     event,
@@ -105,6 +105,8 @@ RETURN
 RELATION_TYPE_QUERY = '''
 MATCH
     (ve1:VarEvent) -[r:COOCCURS]- (ve2:VarEvent)
+WHERE
+    {}
 WITH
     CASE
         WHEN "VarIncrease" IN labels(ve1) THEN "Increase"
@@ -125,8 +127,6 @@ WITH
     type(r) as relation,
     r.n as relationCount,
     id(r) as relationId
-WHERE
-    {}
 RETURN
     relationCount,
     relation,

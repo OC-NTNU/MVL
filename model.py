@@ -82,7 +82,7 @@ def parse_group(rules, neo4j_id):
     """
     operands = []
 
-    for rule in rules['rules']:
+    for rule in rules.get('rules', []):
         if rule.get('rules'):
             operand = parse_group(rule, neo4j_id)
         else:
@@ -90,13 +90,14 @@ def parse_group(rules, neo4j_id):
 
         operands.append(operand)
 
-    condition = ' ' + rules['condition'] + ' '
+    condition = ' ' + rules.get('condition', '') + ' '
     operands_str = condition.join(operands)
 
     if len(operands) > 1:
         operands_str = '( ' + operands_str + ' )'
 
-    return operands_str
+    # if rules is empty, return TRUE, so query remains well-formed
+    return operands_str or 'TRUE'
 
 
 # TODO: escape special symbols in regex

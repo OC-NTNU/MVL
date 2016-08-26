@@ -1,6 +1,6 @@
 * TODO: remove variable "NP"
 * TODO: Ranking on year: articles without a year should be at the bottom
-* TODO: show controls in vis.js graph
 * TODO: pattern name in pop-up for relation instances
 
+* TODO: change "event" to "predicate" in code too?
 * TODO: document counts instead of sentence counts?
