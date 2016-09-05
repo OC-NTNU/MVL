@@ -11,8 +11,8 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 log.addHandler(handler)
 # enable logging here
-# log.setLevel(logging.DEBUG)
 log.setLevel(logging.ERROR)
+#log.setLevel(logging.DEBUG)
 
 from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, RELATION_TYPE_QUERY, \
     RELATION_INST_QUERY
@@ -127,7 +127,7 @@ def parse_rule(rule, neo4j_id):
         elif 'ends_with_string' in operator:
             operand_str = '{}.subStr ENDS WITH "{}"'.format(neo4j_id, value)
     elif field == 'event':
-        if operator == 'equal':
+        if 'equal' in operator:
             operand_str = '{}:Var{}'.format(neo4j_id, value)
     elif field == 'cooccurrence':
         if operator == 'equals':
