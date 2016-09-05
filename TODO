@@ -1,5 +1,6 @@
 * TODO: remove variable "NP"
 * TODO: Ranking on year: articles without a year should be at the bottom
+* TODO: resizable graph panel
 * TODO: pattern name in pop-up for relation instances
 
 * TODO: change "event" to "predicate" in code too?
