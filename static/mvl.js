@@ -281,7 +281,7 @@ function resetEvent(id) {
 var relation_options = {
     filters: [
         {
-            id: 'cooccurrence',
+            id: 'cooccurs',
             type: 'string',
             size: 60,
             operators: [
@@ -289,11 +289,22 @@ var relation_options = {
             ],
             default_value: 0,
             min: 0,
-            description: 'restrict the type of relation'
+            description: 'search for co-occurring venets'
+        },
+        {
+            id: 'causes',
+            type: 'string',
+            size: 60,
+            operators: [
+                'greater', 'equal', 'less'
+            ],
+            default_value: 0,
+            min: 0,
+            description: 'search for causally related events'
         }
     ],
     allow_empty: true,
-    default_filter: 'cooccurrence',
+    default_filter: 'cooccurs',
     display_empty_filter: false,
     plugins: {
         //'bt-tooltip-errors': {delay: 100},
@@ -373,7 +384,8 @@ function showRelationTypes(data, id) {
         // so we do this instead:
         var t = $('#types-table-relation-' + id).DataTable();
         var row = t.row(indexes[0]).data();
-        var pay_load = {node_ids: [row.nodeId1, row.nodeId2]};
+        var pay_load = {rel_type_info: [row.nodeId1, row.relation, row.nodeId2]};
+        //console.log(JSON.stringify(pay_load));
         $.ajax({
             url: $RELATION_INST_URL,
             type: 'POST',

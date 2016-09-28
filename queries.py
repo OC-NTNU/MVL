@@ -102,11 +102,10 @@ RETURN
     LIMIT 500
 '''
 
+
 RELATION_TYPE_QUERY = '''
-MATCH
-    (ve1:VarEvent) -[r:COOCCURS]- (ve2:VarEvent)
 WHERE
-    {}
+    {where}
 WITH
     CASE
         WHEN "VarIncrease" IN labels(ve1) THEN "Increase"
@@ -141,63 +140,21 @@ RETURN
     LIMIT 500
 '''
 
-# RELATION_INST_QUERY = '''
-# MATCH
-#     (ve1:VarEvent) -[:INST]-> (e1:Event) <-[:HAS_EVENT]- (s:Sentence)
-#     -[:HAS_EVENT]-> (e2:Event) <-[:INST]- (ve2:VarEvent),
-#     (s) <-[:HAS_SENT]- (a:Article)
-# WHERE
-#     id(ve1) = {id1} AND id(ve2) = {id2}
-# WITH
-#     CASE
-#         WHEN "VarIncrease" IN labels(ve1) THEN "Increase"
-#         WHEN "VarDecrease" IN labels(ve1) THEN "Decrease"
-#         ELSE "Change"
-#     END AS event1,
-#     e1.charOffsetBegin as eventBegin1,
-#     e1.charOffsetEnd as eventEnd1,
-#
-#     CASE
-#         WHEN "VarIncrease" IN labels(ve2) THEN "Increase"
-#         WHEN "VarDecrease" IN labels(ve2) THEN "Decrease"
-#         ELSE "Change"
-#     END AS event2,
-#     e2.charOffsetBegin as eventBegin2,
-#     e2.charOffsetEnd as eventEnd2,
-#
-#     s.charOffsetBegin as sentBegin,
-#     s.sentChars as sentence,
-#
-#     a.doi as doi,
-#     a.author as author,
-#     a.title as title,
-#     a.year as year,
-#     a.journal as journal,
-#     a.volume as volume
-# RETURN
-#     event1,
-#     eventBegin1,
-#     eventEnd1,
-#     event2,
-#     eventBegin2,
-#     eventEnd2,
-#     sentBegin,
-#     sentence,
-#     doi,
-#     author,
-#     title,
-#     year,
-#     journal,
-#     volume
-#     ORDER BY year DESC
-#     LIMIT 500
-# '''
+
+COOCCURS_TYPE_QUERY = '''
+MATCH
+    (ve1:VarEvent) -[r:COOCCURS]- (ve2:VarEvent)
+''' + RELATION_TYPE_QUERY
+
+
+# causal relation is directed
+CAUSES_TYPE_QUERY = '''
+MATCH
+    (ve1:VarEvent) -[r:CAUSES]-> (ve2:VarEvent)
+''' + RELATION_TYPE_QUERY
+
 
 RELATION_INST_QUERY = '''
-MATCH
-    (ve1:VarEvent) -[:INST]-> (e1:Event) <-[:HAS_EVENT]- (s:Sentence)
-    -[:HAS_EVENT]-> (e2:Event) <-[:INST]- (ve2:VarEvent),
-    (s) <-[:HAS_SENT]- (a:Article)
 WHERE
     id(ve1) = {id1} AND id(ve2) = {id2}
 WITH
@@ -238,3 +195,19 @@ RETURN
     ORDER BY year DESC
     LIMIT 500
 '''
+
+
+COOCCURS_INST_QUERY = '''
+MATCH
+    (ve1:VarEvent) -[:INST]-> (e1:Event) <-[:HAS_EVENT]- (s:Sentence)
+    -[:HAS_EVENT]-> (e2:Event) <-[:INST]- (ve2:VarEvent),
+    (s) <-[:HAS_SENT]- (a:Article)
+    ''' + RELATION_INST_QUERY
+
+
+CAUSES_INST_QUERY = '''
+MATCH
+    (ve1:VarEvent) -[:CAUSES]-> (ve2:VarEvent),
+    (ve1) -[:INST]-> (e1:Event) -[:HAS_EFFECT]-> (e2:Event) <-[:INST]- (ve2),
+    (e1:Event) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
+    ''' + RELATION_INST_QUERY

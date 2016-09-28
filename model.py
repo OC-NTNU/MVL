@@ -14,8 +14,9 @@ log.addHandler(handler)
 log.setLevel(logging.ERROR)
 #log.setLevel(logging.DEBUG)
 
-from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, RELATION_TYPE_QUERY, \
-    RELATION_INST_QUERY
+from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, \
+    COOCCURS_TYPE_QUERY, CAUSES_TYPE_QUERY, \
+    COOCCURS_INST_QUERY, CAUSES_INST_QUERY
 
 from flask import current_app as app
 
@@ -62,12 +63,26 @@ def get_relation_types(rules):
                 parse_group(rules['event_2'], 've2'),
                 parse_group(rules['relation'], 'r')]
     where = ' AND\n    '.join(operands)
-    query = RELATION_TYPE_QUERY.format(where)
+    relation = rules['relation']['rules'][0]['id'].upper()
+
+    if relation == 'COOCCURS':
+        query = COOCCURS_TYPE_QUERY.format(where=where)
+    elif relation == 'CAUSES':
+        query =  CAUSES_TYPE_QUERY.format(where=where)
+    # TODO: error handling
+
     return run_query(query)
 
 
-def get_relation_inst(node_ids):
-    query = RELATION_INST_QUERY.format(id1=node_ids[0], id2=node_ids[1])
+def get_relation_inst(rel_type_info):
+    id1, relation, id2 = rel_type_info
+
+    if relation == 'COOCCURS':
+        query =  COOCCURS_INST_QUERY.format(id1=id1, id2=id2)
+    elif relation == 'CAUSES':
+        query =  CAUSES_INST_QUERY.format(id1=id1, id2=id2)
+    # TODO: error handling
+
     return run_query(query)
 
 
@@ -129,7 +144,7 @@ def parse_rule(rule, neo4j_id):
     elif field == 'event':
         if 'equal' in operator:
             operand_str = '{}:Var{}'.format(neo4j_id, value)
-    elif field == 'cooccurrence':
+    elif field in ['cooccurs', 'causes']:
         if operator == 'equals':
             operand_str = '{}.n = {}'.format(neo4j_id, value)
         elif operator == 'greater':

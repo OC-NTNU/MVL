@@ -114,8 +114,8 @@ def relation_types():
 @app.route('/relation-inst', methods=['POST'])
 def relation_inst():
     pay_load = request.get_json()
-    node_ids = pay_load['node_ids']
-    instances = get_relation_inst(node_ids)
+    rel_type_info = pay_load['rel_type_info']
+    instances = get_relation_inst(rel_type_info)
     records = []
 
     for inst in instances:
