@@ -203,17 +203,18 @@ function showEventTypes(data, id) {
         data: data.responseJSON,
         columns: [
             {data: 'eventCount', title: 'Count', width: "10%"},
-            {data: 'event', title: 'Predicate', width: "20%"},
-            {data: 'variable', title: 'Variable'} //,
-            //{data: 'nodeId', title: 'Id'}
+            {data: 'eventType', title: 'Predicate', width: "20%"},
+            {data: 'variableType', title: 'Variable'}
         ]
     });
 
     table
         .on('select', function (e, dt, type, indexes) {
-            // TODO: pass only single node id
             var row = table.row(indexes[0]).data();
-            var pay_load = {node_ids: [row.nodeId]};
+            var pay_load = {
+                'event': row.eventType,
+                'var': row.variableType
+            };
             $.ajax({
                 url: $EVENT_INST_URL,
                 type: 'POST',
@@ -369,10 +370,7 @@ function showRelationTypes(data, id) {
             {data: 'event1', title: 'Predicate1', width: "10%"},
             {data: 'variable1', title: 'Variable1'},
             {data: 'event2', title: 'Predicate2', width: "10%"},
-            {data: 'variable2', title: 'Variable2'},
-            //{data: 'nodeId1', name: 'nodeId1', title: 'nodeId1'},
-            //{data: 'nodeId2', name: 'nodeId2', title: 'nodeId2'},
-            //{data: 'relationId', name: 'relId', title: 'relId'}
+            {data: 'variable2', title: 'Variable2'}
         ],
         rowId: 'relationId'
     });
@@ -384,7 +382,13 @@ function showRelationTypes(data, id) {
         // so we do this instead:
         var t = $('#types-table-relation-' + id).DataTable();
         var row = t.row(indexes[0]).data();
-        var pay_load = {rel_type_info: [row.nodeId1, row.relation, row.nodeId2]};
+        var pay_load = {
+            'event1': row.event1,
+            'event2': row.event2,
+            'var1': row.variable1,
+            'var2': row.variable2,
+            'relation': row.relation
+        };
         //console.log(JSON.stringify(pay_load));
         $.ajax({
             url: $RELATION_INST_URL,
@@ -616,43 +620,43 @@ $.fn.scrollView = function () {
 
 /*
 
-$('#builder-event-2').queryBuilder('setRules', {
-    'rules': [{
-        'value': 'Decrease',
-        'field': 'event',
-        'operator': 'equal',
-        'input': 'select',
-        'type': 'string',
-        'id': 'event'
-    }],
-    'condition': 'AND'
-});
+ $('#builder-event-2').queryBuilder('setRules', {
+ 'rules': [{
+ 'value': 'Decrease',
+ 'field': 'event',
+ 'operator': 'equal',
+ 'input': 'select',
+ 'type': 'string',
+ 'id': 'event'
+ }],
+ 'condition': 'AND'
+ });
 
-$('#builder-event-1').queryBuilder('setRules', {
-    'rules': [{
-        'value': 'Increase',
-        'field': 'event',
-        'operator': 'equal',
-        'input': 'select',
-        'type': 'string',
-        'id': 'event'
-    }],
-    'condition': 'AND'
-});
+ $('#builder-event-1').queryBuilder('setRules', {
+ 'rules': [{
+ 'value': 'Increase',
+ 'field': 'event',
+ 'operator': 'equal',
+ 'input': 'select',
+ 'type': 'string',
+ 'id': 'event'
+ }],
+ 'condition': 'AND'
+ });
 
-$('#builder-relation-1').queryBuilder('setRules', {
-    'rules': [{
-        'value': '1',
-        'field': 'cooccurrence',
-        'operator': 'greater',
-        'input': 'text',
-        'type': 'string',
-        'id': 'cooccurrence'
-    }],
-    'condition': 'AND'
-});
+ $('#builder-relation-1').queryBuilder('setRules', {
+ 'rules': [{
+ 'value': '1',
+ 'field': 'cooccurrence',
+ 'operator': 'greater',
+ 'input': 'text',
+ 'type': 'string',
+ 'id': 'cooccurrence'
+ }],
+ 'condition': 'AND'
+ });
 
-*/
+ */
 
 $(document).ready(function () {
     $('[data-toggle="popover"]').popover();

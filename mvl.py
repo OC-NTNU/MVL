@@ -31,7 +31,6 @@ SOURCE_LINK = ' '.join(u'''
 </a>
 '''.split())
 
-
 EVENT = ' '.join(u'''
 span class="{event}"
 data-toggle="popover"
@@ -76,8 +75,7 @@ def event_types():
 @app.route('/event-inst', methods=['POST'])
 def event_inst():
     pay_load = request.get_json()
-    node_ids = pay_load['node_ids']
-    sources = get_event_inst(node_ids)
+    sources = get_event_inst(pay_load['event'], pay_load['var'])
 
     # mark up sentences with variables
     sentences = []
@@ -114,8 +112,12 @@ def relation_types():
 @app.route('/relation-inst', methods=['POST'])
 def relation_inst():
     pay_load = request.get_json()
-    rel_type_info = pay_load['rel_type_info']
-    instances = get_relation_inst(rel_type_info)
+    instances = get_relation_inst(
+        event1=pay_load['event1'],
+        event2=pay_load['event2'],
+        var1=pay_load['var1'],
+        var2=pay_load['var2'],
+        relation=pay_load['relation'])
     records = []
 
     for inst in instances:
