@@ -398,7 +398,15 @@ function showRelationTypes(data, id) {
             data: JSON.stringify(pay_load),
             complete: function (data, status) {
                 showRelationInstances(data, status, id);
-                network.selectEdges([row.relationId]);
+                var selectedEdge = parseInt(network.getSelectedEdges()[0]);
+                //console.log(selectedEdge);
+                //console.log(row.relationId)
+                if (selectedEdge !== row.relationId) {
+                    //console.log("calling selectEdges");
+                    network.selectEdges([row.relationId])
+                } //else {
+                //    console.log("NOT calling selectEdges");
+                //}
                 network.focus(row.nodeId1)
             }
         });
@@ -566,6 +574,8 @@ function showGraph(data, id) {
     network = new vis.Network(container, graphData, graph_options);
 
     network.on("selectEdge", function (params) {
+        //console.log("on selectEdge");
+        //console.log(params);
         // select corresponding row in table with relation types
         var rowId = '#' + params.edges[0];
         $('#types-table-relation-' + id).DataTable().row(rowId).draw().show().draw(false).select()

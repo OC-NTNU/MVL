@@ -12,7 +12,7 @@ Cypher queries
 
 EVENT_TYPE_QUERY = '''
 MATCH
-    (et:EventType) -[:OF]-> (v:VariableType)
+    (et:EventType) -[:HAS_VAR]-> (v:VariableType)
 WHERE
     {where}
 WITH
@@ -33,7 +33,7 @@ RETURN
 
 EVENT_INST_QUERY = '''
 MATCH
-    (et:{event}Type) -[:OF]-> (v:VariableType) <-[:OF]- (ei:EventInst) <-[:HAS_EVENT]- (s:Sentence)
+    (et:{event}Type) -[:HAS_VAR]-> (v:VariableType) <-[:HAS_VAR]- (ei:EventInst) <-[:HAS_EVENT]- (s:Sentence)
     <-[:HAS_SENT]- (a:Article)
 WHERE
     v.subStr = "{var}"
@@ -75,11 +75,11 @@ RETURN
 
 COOCCURS_TYPE_QUERY = '''
 MATCH
-    (v1:VariableType) <-[:OF]- (et1:EventType)
+    (v1:VariableType) <-[:HAS_VAR]- (et1:EventType)
     -[r:COOCCURS]-
-    (et2:EventType) -[:OF]-> (v2:VariableType)
+    (et2:EventType) -[:HAS_VAR]-> (v2:VariableType)
 WHERE
-    id(et1) < id(et2) AND {where}
+    {where}
 WITH
     CASE
         WHEN "IncreaseType" IN labels(et1) THEN "Increase"
@@ -119,9 +119,9 @@ RETURN
 
 CAUSES_TYPE_QUERY = '''
 MATCH
-    (v1:VariableType) <-[:OF]- (et1:EventType)
+    (v1:VariableType) <-[:HAS_VAR]- (et1:EventType)
     -[r:CAUSES]->
-    (et2:EventType) -[:OF]-> (v2:VariableType)
+    (et2:EventType) -[:HAS_VAR]-> (v2:VariableType)
 WHERE
     {where}
 WITH
@@ -151,6 +151,8 @@ RETURN
     variable1,
     event2,
     variable2,
+    nodeId1,
+    nodeId2,
     relationId
     ORDER BY relationCount DESC
     LIMIT 500
@@ -201,16 +203,17 @@ RETURN
 # cooccurrence relation is non-directed
 COOCCURS_INST_QUERY = '''
 MATCH
-    (v1:VariableType) <-[:OF]- (ei1:{event1}Inst)
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
     <-[:HAS_EVENT]- (s:Sentence) -[:HAS_EVENT]->
-    (ei2:{event2}Inst) -[:OF]-> (v2:VariableType),
+    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
     (s) <-[:HAS_SENT]- (a:Article)
     ''' + RELATION_INST_QUERY
 
 # causal relation is directed
 CAUSES_INST_QUERY = '''
 MATCH
-    (ve1:VarEvent) -[:CAUSES]-> (ve2:VarEvent),
-    (ve1) -[:INST]-> (e1:Event) -[:HAS_EFFECT]-> (e2:Event) <-[:INST]- (ve2),
-    (e1:Event) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
+    <-[:HAS_CAUSE]- (:CausationInst) -[:HAS_EFFECT]->
+    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
+    (ei1) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
     ''' + RELATION_INST_QUERY

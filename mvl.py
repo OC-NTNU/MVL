@@ -100,10 +100,25 @@ def event_inst():
 @app.route('/relation-types', methods=['POST'])
 def relation_types():
     rules = request.get_json()
-    result = get_relation_types(rules)
-    # TODO: serialize to Json from generator instead of list
-    result = [dict(r) for r in result]
-    response = dumps(result, encoding='utf-8')
+    types = get_relation_types(rules)
+    rel_ids = set()
+    records = []
+
+    # FIXME relationId hack
+    # This is to prevent the same COOCCURS relation,
+    # which is non-directed, to show up twice in the returned relation types.
+    # I can not find a way to express this in a Cypher query.
+    # Earlier I used "WHERE id(et1) < id(et2)", but that is wrong.
+    # For example, these two settings should give the same results:
+    # 1) Event 1: variable is diatom, Event 2: no restrictions;
+    # 2) Event 2: no restrictions, Event 2: variable is diatom.
+    # However, when using "id(et1) < id(et2)" only one of them will work!
+    for typ in types:
+        if not typ['relationId'] in rel_ids:
+            rel_ids.add(typ['relationId'])
+            records.append(dict(typ))
+
+    response = dumps(records, encoding='utf-8')
     return Response(response=response,
                     status=200,
                     mimetype="application/json")
