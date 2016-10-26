@@ -10,16 +10,17 @@ Cypher queries
 # Event queries
 # ------------------------------------------------------------------------------
 
+
 EVENT_TYPE_QUERY = '''
 MATCH
-    (et:EventType) -[:HAS_VAR]-> (v:VariableType)
+    (v:VariableType) <-[:HAS_VAR]- (e:EventType)
 WHERE
     {where}
 WITH
-    et.n AS eventCount,
+    e.n AS eventCount,
     CASE
-        WHEN "IncreaseType" IN labels(et) THEN "Increase"
-        WHEN "DecreaseType" IN labels(et) THEN "Decrease"
+        WHEN "IncreaseType" IN labels(e) THEN "Increase"
+        WHEN "DecreaseType" IN labels(e) THEN "Decrease"
         ELSE "Change"
     END AS eventType,
     v.subStr AS variableType
@@ -31,21 +32,69 @@ RETURN
     LIMIT 500
 '''
 
+
+# No need to check for instances, because:
+# if there is an EventType, there must be at least one corresponding EventInst
+
+EVENT_TYPE_WITH_SPECIAL_QUERY = '''
+MATCH
+    (v:VariableType) <-[:TENTAILS_VAR*]-
+    (vs:VariableType) <-[:HAS_VAR]- (e:EventType)
+WHERE
+    {where}
+WITH
+    e.n AS eventCount,
+    CASE
+        WHEN "IncreaseType" IN labels(e) THEN "Increase"
+        WHEN "DecreaseType" IN labels(e) THEN "Decrease"
+        ELSE "Change"
+    END AS eventType,
+    vs.subStr AS variableType
+RETURN
+    eventCount,
+    eventType,
+    variableType
+    ORDER BY eventCount DESC
+    LIMIT 500
+'''
+
+EVENT_TYPE_WITH_GENERAL_QUERY = '''
+MATCH
+    (v:VariableType) -[:TENTAILS_VAR*]->
+    (vg:VariableType) <-[:HAS_VAR]- (e:EventType)
+WHERE
+    {where}
+WITH
+    e.n AS eventCount,
+    CASE
+        WHEN "IncreaseType" IN labels(e) THEN "Increase"
+        WHEN "DecreaseType" IN labels(e) THEN "Decrease"
+        ELSE "Change"
+    END AS eventType,
+    vg.subStr AS variableType
+RETURN
+    eventCount,
+    eventType,
+    variableType
+    ORDER BY eventCount DESC
+    LIMIT 500
+'''
+
 EVENT_INST_QUERY = '''
 MATCH
-    (et:{event}Type) -[:HAS_VAR]-> (v:VariableType) <-[:HAS_VAR]- (ei:EventInst) <-[:HAS_EVENT]- (s:Sentence)
-    <-[:HAS_SENT]- (a:Article)
+    (v:VariableType) <-[:HAS_VAR]- (e:{event}Inst)
+    <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
 WHERE
     v.subStr = "{var}"
 WITH
     CASE
-        WHEN "IncreaseType" IN labels(et) THEN "Increase"
-        WHEN "DecreaseType" IN labels(et) THEN "Decrease"
+        WHEN "IncreaseInst" IN labels(e) THEN "Increase"
+        WHEN "DecreaseInst" IN labels(e) THEN "Decrease"
         ELSE "Change"
     END AS event,
-    ei.charOffsetBegin as eventBegin,
-    ei.charOffsetEnd as eventEnd,
-    ei.extractName as eventPattern,
+    e.charOffsetBegin as eventBegin,
+    e.charOffsetEnd as eventEnd,
+    e.extractName as eventPattern,
     s.charOffsetBegin as sentBegin,
     s.sentChars as sentence,
     a.doi as doi,
@@ -70,8 +119,6 @@ RETURN
 # ------------------------------------------------------------------------------
 
 # Cooccurrence relation is non-directed.
-# he id(et1) < id(et2) statement prevents counting co-occurence twice
-# (because matching is symmetrical).
 
 COOCCURS_TYPE_QUERY = '''
 MATCH

@@ -62,8 +62,7 @@ def search():
 
 @app.route('/event-types', methods=['POST'])
 def event_types():
-    rules = request.get_json()
-    result = get_event_types(rules)
+    result = get_event_types(**request.get_json())
     # TODO: serialize to Json from generator instead of list
     result = [dict(r) for r in result]
     json = dumps(result, encoding='utf-8')

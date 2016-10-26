@@ -1,5 +1,5 @@
+* TODO: use arrows for direction in graph in the case of causal relations
 * TODO: for relations, AND/OR rules is not handled and makes no sense
-* TODO: remove variable "NP"
 * TODO: Ranking on year: articles without a year should be at the bottom
 * TODO: resizable graph panel
 * TODO: pattern name in pop-up for relation instances

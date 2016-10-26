@@ -156,33 +156,122 @@ var event_options = {
     }
 };
 
-// init
 
+
+// init elements
+
+// NB creating a for-loop to init events 1 and 2 won't not work,
+// because if the counter is inside a function body, its value will not be fixed
+// until teh body is executed!
+
+
+// create query builder for event1 types
 $('#builder-event-1').queryBuilder(event_options);
-$('#builder-event-2').queryBuilder(event_options);
 
+// create table for event1 types
+$('#types-table-event-1').DataTable({
+    destroy: true,
+    select: {
+        style: 'single'
+    },
+    order: [],
+    columns: [
+        {data: 'eventCount', title: 'Count', width: "10%"},
+        {data: 'eventType', title: 'Predicate', width: "20%"},
+        {data: 'variableType', title: 'Variable'}
+    ]
+}).on('select', function (e, dt, type, indexes) {
+    var row = dt.row(indexes[0]).data();
+    var pay_load = {
+        'event': row.eventType,
+        'var': row.variableType
+    };
+    $.ajax({
+        url: $EVENT_INST_URL,
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify(pay_load),
+        complete: function (data, status) {
+            showEventInstances(data, 1)
+        }
+    });
+});
 
-// search event types
-
+// search buttons for event1 types
 $('#search-button-event-1').on('click', function () {
     searchEvent(1)
 });
 
+// reset button for event1 types & instances
+$('#reset-button-event-1').on('click', function () {
+    resetEvent(1);
+})
+
+
+// create query builder for event2 types
+$('#builder-event-2').queryBuilder(event_options);
+
+// create table for event2 types
+$('#types-table-event-2').DataTable({
+    destroy: true,
+    select: {
+        style: 'single'
+    },
+    order: [],
+    columns: [
+        {data: 'eventCount', title: 'Count', width: "10%"},
+        {data: 'eventType', title: 'Predicate', width: "20%"},
+        {data: 'variableType', title: 'Variable'}
+    ]
+}).on('select', function (e, dt, type, indexes) {
+    var row = dt.row(indexes[0]).data();
+    var pay_load = {
+        'event': row.eventType,
+        'var': row.variableType
+    };
+    $.ajax({
+        url: $EVENT_INST_URL,
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify(pay_load),
+        complete: function (data, status) {
+            showEventInstances(data, 2)
+        }
+    });
+});
+
+// search buttons for event2 types
 $('#search-button-event-2').on('click', function () {
     searchEvent(2)
 });
 
+// reset button for event2 types & instances
+$('#reset-button-event-2').on('click', function () {
+    resetEvent(2);
+})
+
+
+
+
+
+
+
 function searchEvent(id) {
     $('#types-panel-event-' + id).addClass('hide');
     $('#instances-panel-event-' + id).addClass('hide');
-    var rules = $('#builder-event-' + id).queryBuilder('getRules');
-    //console.log(rules);
+    var pay_load = {
+        rules: $('#builder-event-' + id).queryBuilder('getRules'),
+        with_special: $('#checkbox-special-event-' + id).prop('checked'),
+        with_general: $('#checkbox-general-event-' + id).prop('checked')
+    }
     $.ajax({
         url: $EVENT_TYPE_URL,
         type: 'POST',
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
-        data: JSON.stringify(rules),
+        data: JSON.stringify(pay_load),
         complete: function (data, status) {
             showEventTypes(data, id);
         }
@@ -190,42 +279,13 @@ function searchEvent(id) {
 }
 
 
-// show events
-
 function showEventTypes(data, id) {
     $('#types-panel-event-' + id).removeClass('hide').scrollView();
-    var table = $('#types-table-event-' + id).DataTable({
-        destroy: true,
-        select: {
-            style: 'single'
-        },
-        order: [],
-        data: data.responseJSON,
-        columns: [
-            {data: 'eventCount', title: 'Count', width: "10%"},
-            {data: 'eventType', title: 'Predicate', width: "20%"},
-            {data: 'variableType', title: 'Variable'}
-        ]
-    });
-
-    table
-        .on('select', function (e, dt, type, indexes) {
-            var row = table.row(indexes[0]).data();
-            var pay_load = {
-                'event': row.eventType,
-                'var': row.variableType
-            };
-            $.ajax({
-                url: $EVENT_INST_URL,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                data: JSON.stringify(pay_load),
-                complete: function (data, status) {
-                    showEventInstances(data, id)
-                }
-            });
-        });
+    //console.log(data.responseJSON);
+    var table = $('#types-table-event-' + id).dataTable();
+    table.fnClearTable();
+    table.fnAddData(data.responseJSON);
+    table.fnDraw();
 }
 
 
@@ -256,15 +316,6 @@ function showEventInstances(data, id) {
 }
 
 
-// reset events
-
-$('#reset-button-event-1').on('click', function () {
-    resetEvent(1);
-});
-
-$('#reset-button-event-2').on('click', function () {
-    resetEvent(2);
-});
 
 function resetEvent(id) {
     $('#builder-event-' + id).queryBuilder('reset');

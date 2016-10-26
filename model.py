@@ -14,9 +14,7 @@ log.addHandler(handler)
 log.setLevel(logging.ERROR)
 log.setLevel(logging.DEBUG)
 
-from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, \
-    COOCCURS_TYPE_QUERY, CAUSES_TYPE_QUERY, \
-    COOCCURS_INST_QUERY, CAUSES_INST_QUERY
+from queries import *
 
 from flask import current_app as app
 
@@ -48,8 +46,21 @@ def run_query(query):
         yield record
 
 
-def get_event_types(rules):
-    query = EVENT_TYPE_QUERY.format(where=parse_group(rules))
+def get_event_types(rules, with_special, with_general):
+    where = parse_group(rules)
+    sub_query = EVENT_TYPE_QUERY.format(where=where)
+    parts = [sub_query]
+
+    if with_special:
+        sub_query = EVENT_TYPE_WITH_SPECIAL_QUERY.format(where=where)
+        parts.append(sub_query)
+
+    if with_general:
+        sub_query = EVENT_TYPE_WITH_GENERAL_QUERY.format(where=where)
+        parts.append(sub_query)
+
+    query = 'UNION ALL'.join(parts)
+
     return run_query(query)
 
 
@@ -90,7 +101,7 @@ def get_relation_inst(event1, event2, var1, var2, relation):
 # TODO: error handling (e.g. unknown operator)
 
 
-def parse_group(rules, meta_var='v', meta_event='et', meta_rel='r'):
+def parse_group(rules, meta_var='v', meta_event='e', meta_rel='r'):
     """
     parse query-builder group
     """
