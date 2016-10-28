@@ -157,12 +157,11 @@ var event_options = {
 };
 
 
-
 // init elements
 
 // NB creating a for-loop to init events 1 and 2 won't not work,
 // because if the counter is inside a function body, its value will not be fixed
-// until teh body is executed!
+// until the body is executed!
 
 
 // create query builder for event1 types
@@ -170,11 +169,9 @@ $('#builder-event-1').queryBuilder(event_options);
 
 // create table for event1 types
 $('#types-table-event-1').DataTable({
-    destroy: true,
     select: {
         style: 'single'
     },
-    order: [],
     columns: [
         {data: 'eventCount', title: 'Count', width: "10%"},
         {data: 'eventType', title: 'Predicate', width: "20%"},
@@ -183,8 +180,8 @@ $('#types-table-event-1').DataTable({
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
-        'event': row.eventType,
-        'var': row.variableType
+        event_direction: row.eventType,
+        variable_string: row.variableType
     };
     $.ajax({
         url: $EVENT_INST_URL,
@@ -214,11 +211,9 @@ $('#builder-event-2').queryBuilder(event_options);
 
 // create table for event2 types
 $('#types-table-event-2').DataTable({
-    destroy: true,
     select: {
         style: 'single'
     },
-    order: [],
     columns: [
         {data: 'eventCount', title: 'Count', width: "10%"},
         {data: 'eventType', title: 'Predicate', width: "20%"},
@@ -253,11 +248,6 @@ $('#reset-button-event-2').on('click', function () {
 })
 
 
-
-
-
-
-
 function searchEvent(id) {
     $('#types-panel-event-' + id).addClass('hide');
     $('#instances-panel-event-' + id).addClass('hide');
@@ -282,10 +272,11 @@ function searchEvent(id) {
 function showEventTypes(data, id) {
     $('#types-panel-event-' + id).removeClass('hide').scrollView();
     //console.log(data.responseJSON);
-    var table = $('#types-table-event-' + id).dataTable();
-    table.fnClearTable();
-    table.fnAddData(data.responseJSON);
-    table.fnDraw();
+    var table = $('#types-table-event-' + id).DataTable()
+        .clear()
+        .rows.add(data.responseJSON)
+        .columns.adjust()
+        .draw();
 }
 
 
@@ -294,7 +285,6 @@ function showEventInstances(data, id) {
     $('#instances-panel-event-' + id).removeClass('hide').scrollView();
     var table = $('#instances-table-event-' + id).DataTable({
         destroy: true,
-        order: [],
         data: data.responseJSON.data,
         columns: [
             {title: 'Sentence'},
@@ -314,7 +304,6 @@ function showEventInstances(data, id) {
         }
     })
 }
-
 
 
 function resetEvent(id) {
@@ -369,24 +358,93 @@ var relation_options = {
     }
 };
 
-// init
+// create query builder for relations
+$('#builder-relation').queryBuilder(relation_options);
 
-$('#builder-relation-1').queryBuilder(relation_options);
+
+// create table for relation types
+
+$('#types-table-relation').DataTable({
+    select: {
+        style: 'single'
+    },
+    columns: [
+        {data: 'relationCount', title: 'Count', width: "5%"},
+        {data: 'relation', title: 'Relation', width: "10%"},
+        {data: 'event1', title: 'Predicate1', width: "10%"},
+        {data: 'variable1', title: 'Variable1'},
+        {data: 'event2', title: 'Predicate2', width: "10%"},
+        {data: 'variable2', title: 'Variable2'}
+    ],
+    rowId: 'relationId'
+}).on('select', function (e, dt, type, indexes) {
+    var row = dt.row(indexes[0]).data();
+    var pay_load = {
+        'event1': row.event1,
+        'event2': row.event2,
+        'variable1': row.variable1,
+        'variable2': row.variable2,
+        'relation': row.relation
+    };
+    //console.log(JSON.stringify(pay_load));
+    $.ajax({
+        url: $RELATION_INST_URL,
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify(pay_load),
+        complete: function (data, status) {
+            showRelationInstances(data, status);
+            var selectedEdge = parseInt(network.getSelectedEdges()[0]);
+            //console.log(selectedEdge);
+            //console.log(row.relationId)
+            if (selectedEdge !== row.relationId) {
+                //console.log("calling selectEdges");
+                network.selectEdges([row.relationId]);
+                network.focus(row.nodeId1)
+            }
+        }
+    });
+});
+
+// create table for relation instances
+
+$('#instances-table-relation').DataTable({
+    columns: [
+        {data: 'sentence', title: 'Sentence'},
+        {data: 'year', title: 'Year', width: "10%"},
+        {data: 'source', title: 'Source', width: "10%", orderable: false}
+    ],
+    // FIXME: this is legacy, but drawCallback is not called
+    fnDrawCallback: function (oSettings) {
+        $("[data-toggle=popover]").popover(
+            {
+                html: true,
+                container: 'body'
+            });
+    },
+});
 
 // search relation types
 
-$('#search-button-relation-1').on('click', function () {
-    searchRelation("1")
-});
+$('#search-button-relation').on('click', function () {
+    $('#types-panel-relation').addClass('hide');
+    $('#instances-panel-relation').addClass('hide');
 
-function searchRelation(id) {
-    $('#types-panel-relation-' + id).addClass('hide');
-    $('#instances-panel-relation-' + id).addClass('hide');
-
-    var rules = {
-        'event_1': $('#builder-event-1').queryBuilder('getRules'),
-        'event_2': $('#builder-event-2').queryBuilder('getRules'),
-        'relation': $('#builder-relation-' + id).queryBuilder('getRules')
+    var pay_load = {
+        event_1: {
+            rules: $('#builder-event-1').queryBuilder('getRules'),
+            with_special: $('#checkbox-special-event-1').prop('checked'),
+            with_general: $('#checkbox-general-event-1').prop('checked')
+        },
+        event_2: {
+            rules: $('#builder-event-2').queryBuilder('getRules'),
+            with_special: $('#checkbox-special-event-1').prop('checked'),
+            with_general: $('#checkbox-general-event-1').prop('checked')
+        },
+        relation: {
+            rules: $('#builder-relation').queryBuilder('getRules')
+        }
     };
 
     //console.log(rules);
@@ -395,115 +453,43 @@ function searchRelation(id) {
         type: 'POST',
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
-        data: JSON.stringify(rules),
+        data: JSON.stringify(pay_load),
         complete: function (data, status) {
-            showRelationTypes(data, id);
-            showGraph(data, id)
+            showRelationTypes(data);
+            showGraph(data)
         }
     })
-}
+})
 
 
 // show relations
 
-function showRelationTypes(data, id) {
-    $('#types-panel-relation-' + id).removeClass('hide').scrollView();
-    var table = $('#types-table-relation-' + id).DataTable({
-        destroy: true,
-        order: [],
-        select: {
-            style: 'single'
-        },
-        data: data.responseJSON,
-        columns: [
-            {data: 'relationCount', title: 'Count', width: "5%"},
-            {data: 'relation', title: 'Relation', width: "10%"},
-            {data: 'event1', title: 'Predicate1', width: "10%"},
-            {data: 'variable1', title: 'Variable1'},
-            {data: 'event2', title: 'Predicate2', width: "10%"},
-            {data: 'variable2', title: 'Variable2'}
-        ],
-        rowId: 'relationId'
-    });
-    $('#types-panel-relation-' + id).scrollView();
-
-    table.on('select', function (e, dt, type, indexes) {
-        // For some reason, this does not work:
-        //     var row =  table.row(indexes[0]).data();
-        // so we do this instead:
-        var t = $('#types-table-relation-' + id).DataTable();
-        var row = t.row(indexes[0]).data();
-        var pay_load = {
-            'event1': row.event1,
-            'event2': row.event2,
-            'var1': row.variable1,
-            'var2': row.variable2,
-            'relation': row.relation
-        };
-        //console.log(JSON.stringify(pay_load));
-        $.ajax({
-            url: $RELATION_INST_URL,
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: JSON.stringify(pay_load),
-            complete: function (data, status) {
-                showRelationInstances(data, status, id);
-                var selectedEdge = parseInt(network.getSelectedEdges()[0]);
-                //console.log(selectedEdge);
-                //console.log(row.relationId)
-                if (selectedEdge !== row.relationId) {
-                    //console.log("calling selectEdges");
-                    network.selectEdges([row.relationId])
-                } //else {
-                //    console.log("NOT calling selectEdges");
-                //}
-                network.focus(row.nodeId1)
-            }
-        });
-    });
+function showRelationTypes(data) {
+    $('#types-panel-relation').removeClass('hide').scrollView();
+    $('#types-table-relation').DataTable()
+        .clear()
+        .rows.add(data.responseJSON)
+        .columns.adjust()
+        .draw();
 }
 
-
-function showRelationInstances(data, status, id) {
-    $('#instances-panel-relation-' + id).removeClass('hide').scrollView();
-    var table = $('#instances-table-relation-' + id).DataTable({
-        destroy: true,
-        order: [],
-        data: data.responseJSON,
-        columns: [
-            {data: 'sentence', title: 'Sentence'},
-            {data: 'year', title: 'Year', width: "10%"},
-            {data: 'source', title: 'Source', width: "10%", orderable: false}
-        ],
-        // FIXME: this is legacy, but drawCallback is not called
-        fnDrawCallback: function (oSettings) {
-            $("[data-toggle=popover]").popover(
-                {
-                    html: true,
-                    container: 'body'
-                });
-        },
-    });
-
-    // TODO: get popover/tooltip to work
-    // table.on( 'draw.dt', function () {
-    //   table.$("a[rel=popover]").popover().click(function(e) {e.preventDefault();});
-    // } );
+function showRelationInstances(data) {
+    $('#instances-panel-relation').removeClass('hide').scrollView();
+    $('#instances-table-relation').DataTable()
+        .clear()
+        .rows.add(data.responseJSON)
+        .columns.adjust()
+        .draw();
 }
 
 // reset relations
 
-$('#reset-button-relation-1').on('click', function () {
-    resetRelation(1)
-});
-
-function resetRelation(id) {
-    $('#builder-relation-' + id).queryBuilder('reset');
-    $('#types-panel-relation-' + id).addClass('hide');
-    $('#instances-panel-relation-' + id).addClass('hide');
-    $('#graph-panel-' + id).addClass('hide');
-}
+$('#reset-button-relation').on('click', function () {
+    $('#builder-relation').queryBuilder('reset');
+    $('#types-panel-relation').addClass('hide');
+    $('#instances-panel-relation').addClass('hide');
+    $('#graph-panel').addClass('hide');
+})
 
 /***********************************************************************
  * Graph
@@ -553,12 +539,17 @@ var graph_options = {
             }
         }
     },
-    "physics": {
+    interaction: {
+        // TODO these options have no effect
+        hoverConnectedEdges: true,
+        selectConnectedEdges: false
+    },
+    physics: {
         /* "repulsion": {
          "nodeDistance": 100
          }, */
-        "minVelocity": 0.75,
-        "solver": "repulsion"
+        minVelocity: 0.75,
+        solver: "repulsion"
     },
     // FIXME: find nav images (see vis/dist/img/network/)
     interaction: {
@@ -569,8 +560,8 @@ var graph_options = {
 };
 
 
-function showGraph(data, id) {
-    $('#graph-panel-' + id).removeClass('hide');
+function showGraph(data) {
+    $('#graph-panel').removeClass('hide');
 
     var records = data.responseJSON;
     var nodes = new vis.DataSet();
@@ -582,22 +573,28 @@ function showGraph(data, id) {
             nodes.add({
                 id: record.nodeId1,
                 label: wordWrap(record.variable1),
-                group: record.event1
+                title: 'n=' + record.eventCount1,
+                group: record.event1,
+                value: record.eventCount1
             })
         }
         catch (ex) { // node exists already
         }
 
-        // add first node
+        // add second node
         try {
             nodes.add({
                 id: record.nodeId2,
                 label: wordWrap(record.variable2),
-                group: record.event2
+                title: 'n=' + record.eventCount2,
+                group: record.event2,
+                value: record.eventCount2
             })
         }
         catch (ex) { // node exists already
         }
+
+        var head = (record.relation == 'CAUSES');
 
         // add edge
         try {
@@ -606,8 +603,9 @@ function showGraph(data, id) {
                 from: record.nodeId1,
                 to: record.nodeId2,
                 value: record.relationCount,
-                title: record.relation,
+                title: 'n=' + record.relationCount,
                 //label: record.relationId
+                arrows: {to: head}
             })
         }
         catch (ex) { // edge already exists - should not happen?
@@ -629,7 +627,7 @@ function showGraph(data, id) {
         //console.log(params);
         // select corresponding row in table with relation types
         var rowId = '#' + params.edges[0];
-        $('#types-table-relation-' + id).DataTable().row(rowId).draw().show().draw(false).select()
+        $('#types-table-relation').DataTable().row(rowId).draw().show().draw(false).select()
     })
 }
 

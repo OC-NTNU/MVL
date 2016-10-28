@@ -47,52 +47,67 @@ def run_query(query):
 
 
 def get_event_types(rules, with_special, with_general):
+    query = build_event_type_query(rules, with_general, with_special)
+    query += EVENT_TYPE_UNWIND
+    return run_query(query)
+
+
+def build_event_type_query(rules, with_general, with_special,
+                           transfer=''):
     where = parse_group(rules)
-    sub_query = EVENT_TYPE_QUERY.format(where=where)
-    parts = [sub_query]
+    query = EVENT_TYPE_DIRECT.format(where=where) + transfer
 
     if with_special:
-        sub_query = EVENT_TYPE_WITH_SPECIAL_QUERY.format(where=where)
-        parts.append(sub_query)
+        query += EVENT_TYPE_WITH_SPEC.format(where=where) + transfer
+    else:
+        query += EVENT_TYPE_WITHOUT_SPEC
 
     if with_general:
-        sub_query = EVENT_TYPE_WITH_GENERAL_QUERY.format(where=where)
-        parts.append(sub_query)
+        query += EVENT_TYPE_WITH_GEN.format(where=where) + transfer
+    else:
+        query += EVENT_TYPE_WITHOUT_GEN
 
-    query = 'UNION ALL'.join(parts)
+    return query
+
+
+def get_event_inst(event_direction, variable_string):
+    query = EVENT_INST_QUERY.format(event_direction=event_direction,
+                                    variable_string=variable_string)
+    return run_query(query)
+
+
+def get_relation_types(event_1, event_2, relation):
+    transfer = ',\n\teventTypeIds1'
+    query1 = build_event_type_query(**event_1)
+    query2 = build_event_type_query(transfer=transfer, **event_2)
+
+    relation_type = relation['rules']['rules'][0]['id'].upper()
+    direction = '>' if relation_type == 'CAUSES' else ''
+
+    where = parse_group(relation['rules'])
+
+    query = RELATION_TYPE_QUERY.format(
+        event_type_1_query=query1,
+        event_type_2_query=query2,
+        relation=relation_type,
+        direction=direction,
+        where=where)
 
     return run_query(query)
 
 
-def get_event_inst(event, var):
-    query = EVENT_INST_QUERY.format(event=event, var=var)
-    return run_query(query)
-
-
-def get_relation_types(rules):
-    operands = [parse_group(rules['event_1'], meta_var='v1', meta_event='et1'),
-                parse_group(rules['event_2'], meta_var='v2', meta_event='et2'),
-                parse_group(rules['relation'])]
-    where = ' AND\n    '.join(operands)
-    relation = rules['relation']['rules'][0]['id'].upper()
-
+def get_relation_inst(event1, event2, variable1, variable2, relation):
     if relation == 'COOCCURS':
-        query = COOCCURS_TYPE_QUERY.format(where=where)
+        query = COOCCURS_INST_MATCH
     elif relation == 'CAUSES':
-        query = CAUSES_TYPE_QUERY.format(where=where)
-    # TODO: error handling
+        query = CAUSES_INST_MATCH
 
-    return run_query(query)
+    query += RELATION_INST_QUERY
 
-
-def get_relation_inst(event1, event2, var1, var2, relation):
-    if relation == 'COOCCURS':
-        query = COOCCURS_INST_QUERY.format(event1=event1, event2=event2,
-                                           var1=var1, var2=var2)
-    elif relation == 'CAUSES':
-        query = CAUSES_INST_QUERY.format(event1=event1, event2=event2,
-                                         var1=var1, var2=var2)
-    # TODO: error handling
+    query = query.format(event1=event1,
+                         event2=event2,
+                         variable1=variable1,
+                         variable2=variable2)
     return run_query(query)
 
 

@@ -62,11 +62,11 @@ def search():
 
 @app.route('/event-types', methods=['POST'])
 def event_types():
-    result = get_event_types(**request.get_json())
+    rows = get_event_types(**request.get_json())
     # TODO: serialize to Json from generator instead of list
-    result = [dict(r) for r in result]
-    json = dumps(result, encoding='utf-8')
-    return Response(response=json,
+    rows = [dict(r) for r in rows]
+    response = dumps(rows, encoding='utf-8')
+    return Response(response=response,
                     status=200,
                     mimetype="application/json")
 
@@ -74,19 +74,19 @@ def event_types():
 @app.route('/event-inst', methods=['POST'])
 def event_inst():
     pay_load = request.get_json()
-    sources = get_event_inst(pay_load['event'], pay_load['var'])
+    records = get_event_inst(**pay_load)
 
     # mark up sentences with variables
     sentences = []
 
-    for row in sources:
-        stand_off = [(row['eventBegin'] - row['sentBegin'],
-                      row['eventEnd'] - row['sentBegin'],
-                      EVENT.format(event=row['event'],
-                                   pattern=row['eventPattern']))]
-        sent = stand_off_to_inline(row['sentence'], stand_off)
-        source = SOURCE_LINK.format(row=row)
-        sentences.append([sent, row['year'], source])
+    for rec in records:
+        stand_off = [(rec['eventBegin'] - rec['sentBegin'],
+                      rec['eventEnd'] - rec['sentBegin'],
+                      EVENT.format(event=rec['event'],
+                                   pattern=rec['eventPattern']))]
+        sent = stand_off_to_inline(rec['sentence'], stand_off)
+        source = SOURCE_LINK.format(row=rec)
+        sentences.append([sent, rec['year'], source])
 
     response = dumps(dict(data=sentences),
                      encoding='utf-8')
@@ -98,10 +98,8 @@ def event_inst():
 
 @app.route('/relation-types', methods=['POST'])
 def relation_types():
-    rules = request.get_json()
-    types = get_relation_types(rules)
-    rel_ids = set()
-    records = []
+    pay_load = request.get_json()
+    records = get_relation_types(**pay_load)
 
     # FIXME relationId hack
     # This is to prevent the same COOCCURS relation,
@@ -112,12 +110,10 @@ def relation_types():
     # 1) Event 1: variable is diatom, Event 2: no restrictions;
     # 2) Event 2: no restrictions, Event 2: variable is diatom.
     # However, when using "id(et1) < id(et2)" only one of them will work!
-    for typ in types:
-        if not typ['relationId'] in rel_ids:
-            rel_ids.add(typ['relationId'])
-            records.append(dict(typ))
+    rows = dict((r['relationId'], dict(r))
+                for r in records).values()
 
-    response = dumps(records, encoding='utf-8')
+    response = dumps(rows, encoding='utf-8')
     return Response(response=response,
                     status=200,
                     mimetype="application/json")
@@ -126,15 +122,10 @@ def relation_types():
 @app.route('/relation-inst', methods=['POST'])
 def relation_inst():
     pay_load = request.get_json()
-    instances = get_relation_inst(
-        event1=pay_load['event1'],
-        event2=pay_load['event2'],
-        var1=pay_load['var1'],
-        var2=pay_load['var2'],
-        relation=pay_load['relation'])
-    records = []
+    records = get_relation_inst(**pay_load)
+    rows = []
 
-    for inst in instances:
+    for inst in records:
         # create sentence with mark-up for events
         stand_off = [(inst['eventBegin1'] - inst['sentBegin'],
                       inst['eventEnd1'] - inst['sentBegin'],
@@ -148,10 +139,9 @@ def relation_inst():
         record = dict(sentence=sent,
                       year=inst['year'],
                       source=source)
-        records.append(record)
+        rows.append(record)
 
-    response = dumps(records, encoding='utf-8')
-
+    response = dumps(rows, encoding='utf-8')
     return Response(response=response,
                     status=200,
                     mimetype="application/json")
