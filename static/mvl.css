@@ -29,6 +29,11 @@ body {
     min-height: 500px;
 }
 
+#graph-panel-body {
+    height: 95%;
+    width: 100%;
+}
+
 #event-graph {
     /* border: 1px solid lightgray; */
     width: 100%;
@@ -62,6 +67,29 @@ body {
     padding-top: 70px;
 }
 */
-.popover{
+.popover {
     max-width: 75%; /* Max Width of the popover (depending on the container!) */
+}
+
+.panel-actions {
+    margin-top: -20px;
+    margin-bottom: 0;
+    text-align: right;
+}
+
+.panel-actions a {
+    color: #333;
+}
+
+.panel-fullscreen {
+    display: block;
+    z-index: 9999;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    overflow: auto;
 }

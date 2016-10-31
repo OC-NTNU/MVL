@@ -1,9 +1,6 @@
 {% extends "bootstrap/base.html" %}
 {% import "macros.html" as macros %}
 
-
-<!-- TODO: clear up JS/CSS loading mess -->
-
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet"
@@ -68,7 +65,7 @@
                     <ul class="nav navbar-nav">
                         <li><a href="#header-event-1">Event 1</a></li>
                         <li><a href="#header-event-2">Event 2</a></li>
-                        <li><a href="#header-relation-1">Relation</a></li>
+                        <li><a href="#header-relation">Relation</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="#header-help">Help</a></li>
@@ -110,9 +107,9 @@
     {{ macros.event("2") }}
 
 
-    {{ macros.header("header-relation-1", "Relation") }}
+    {{ macros.header("header-relation", "Relation") }}
 
-    {{ macros.relation("1") }}
+    {{ macros.relation() }}
 
 
     {{ macros.header("header-help", "Help") }}

@@ -12,11 +12,9 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 # enable logging here
 log.setLevel(logging.ERROR)
-#log.setLevel(logging.DEBUG)
+log.setLevel(logging.DEBUG)
 
-from queries import EVENT_TYPE_QUERY, EVENT_INST_QUERY, \
-    COOCCURS_TYPE_QUERY, CAUSES_TYPE_QUERY, \
-    COOCCURS_INST_QUERY, CAUSES_INST_QUERY
+from queries import *
 
 from flask import current_app as app
 
@@ -48,41 +46,68 @@ def run_query(query):
         yield record
 
 
-def get_event_types(rules):
-    query = EVENT_TYPE_QUERY.format(parse_group(rules, 've'))
+def get_event_types(rules, with_special, with_general):
+    query = build_event_type_query(rules, with_general, with_special)
+    query += EVENT_TYPE_UNWIND
     return run_query(query)
 
 
-def get_event_inst(node_ids):
-    query = EVENT_INST_QUERY.format(node_ids)
+def build_event_type_query(rules, with_general, with_special,
+                           transfer=''):
+    where = parse_group(rules)
+    query = EVENT_TYPE_DIRECT.format(where=where) + transfer
+
+    if with_special:
+        query += EVENT_TYPE_WITH_SPEC.format(where=where) + transfer
+    else:
+        query += EVENT_TYPE_WITHOUT_SPEC
+
+    if with_general:
+        query += EVENT_TYPE_WITH_GEN.format(where=where) + transfer
+    else:
+        query += EVENT_TYPE_WITHOUT_GEN
+
+    return query
+
+
+def get_event_inst(event_direction, variable_string):
+    query = EVENT_INST_QUERY.format(event_direction=event_direction,
+                                    variable_string=variable_string)
     return run_query(query)
 
 
-def get_relation_types(rules):
-    operands = [parse_group(rules['event_1'], 've1'),
-                parse_group(rules['event_2'], 've2'),
-                parse_group(rules['relation'], 'r')]
-    where = ' AND\n    '.join(operands)
-    relation = rules['relation']['rules'][0]['id'].upper()
+def get_relation_types(event_1, event_2, relation):
+    transfer = ',\n\teventTypeIds1'
+    query1 = build_event_type_query(**event_1)
+    query2 = build_event_type_query(transfer=transfer, **event_2)
 
+    relation_type = relation['rules']['rules'][0]['id'].upper()
+    direction = '>' if relation_type == 'CAUSES' else ''
+
+    where = parse_group(relation['rules'])
+
+    query = RELATION_TYPE_QUERY.format(
+        event_type_1_query=query1,
+        event_type_2_query=query2,
+        relation=relation_type,
+        direction=direction,
+        where=where)
+
+    return run_query(query)
+
+
+def get_relation_inst(event1, event2, variable1, variable2, relation):
     if relation == 'COOCCURS':
-        query = COOCCURS_TYPE_QUERY.format(where=where)
+        query = COOCCURS_INST_MATCH
     elif relation == 'CAUSES':
-        query =  CAUSES_TYPE_QUERY.format(where=where)
-    # TODO: error handling
+        query = CAUSES_INST_MATCH
 
-    return run_query(query)
+    query += RELATION_INST_QUERY
 
-
-def get_relation_inst(rel_type_info):
-    id1, relation, id2 = rel_type_info
-
-    if relation == 'COOCCURS':
-        query =  COOCCURS_INST_QUERY.format(id1=id1, id2=id2)
-    elif relation == 'CAUSES':
-        query =  CAUSES_INST_QUERY.format(id1=id1, id2=id2)
-    # TODO: error handling
-
+    query = query.format(event1=event1,
+                         event2=event2,
+                         variable1=variable1,
+                         variable2=variable2)
     return run_query(query)
 
 
@@ -91,7 +116,7 @@ def get_relation_inst(rel_type_info):
 # TODO: error handling (e.g. unknown operator)
 
 
-def parse_group(rules, neo4j_id):
+def parse_group(rules, meta_var='v', meta_event='e', meta_rel='r'):
     """
     parse query-builder group
     """
@@ -99,9 +124,9 @@ def parse_group(rules, neo4j_id):
 
     for rule in rules.get('rules', []):
         if rule.get('rules'):
-            operand = parse_group(rule, neo4j_id)
+            operand = parse_group(rule, meta_var, meta_event, meta_rel)
         else:
-            operand = parse_rule(rule, neo4j_id)
+            operand = parse_rule(rule, meta_var, meta_event, meta_rel)
 
         operands.append(operand)
 
@@ -117,7 +142,7 @@ def parse_group(rules, neo4j_id):
 
 # TODO: escape special symbols in regex
 
-def parse_rule(rule, neo4j_id):
+def parse_rule(rule, meta_var='v', meta_event='et', meta_rel='r'):
     """
     parse query-builder rule
     """
@@ -126,31 +151,31 @@ def parse_rule(rule, neo4j_id):
                                    rule['type'], rule['value']
     if field == 'variable':
         if 'equal' in operator:
-            operand_str = '{}.subStr = "{}"'.format(neo4j_id, value)
+            operand_str = '{}.subStr = "{}"'.format(meta_var, value)
         elif 'begins_with_word' in operator:
-            operand_str = r'{}.subStr =~ "^{}(\\W.*|$)"'.format(neo4j_id, value)
+            operand_str = r'{}.subStr =~ "^{}(\\W.*|$)"'.format(meta_var, value)
         elif 'contains_word' in operator:
             operand_str = r'{}.subStr =~ "(^|.*\\W){}(\\W.*|$)"'.format(
-                neo4j_id,
-                value)
+                meta_var, value)
         elif 'ends_with_word' in operator:
-            operand_str = r'{}.subStr =~ "(^|.*\\W){}$"'.format(neo4j_id, value)
+            operand_str = r'{}.subStr =~ "(^|.*\\W){}$"'.format(
+                meta_var, value)
         elif 'begins_with_string' in operator:
-            operand_str = '{}.subStr STARTS WITH "{}"'.format(neo4j_id, value)
+            operand_str = '{}.subStr STARTS WITH "{}"'.format(meta_var, value)
         elif 'contains_string' in operator:
-            operand_str = '{}.subStr CONTAINS "{}"'.format(neo4j_id, value)
+            operand_str = '{}.subStr CONTAINS "{}"'.format(meta_var, value)
         elif 'ends_with_string' in operator:
-            operand_str = '{}.subStr ENDS WITH "{}"'.format(neo4j_id, value)
+            operand_str = '{}.subStr ENDS WITH "{}"'.format(meta_var, value)
     elif field == 'event':
         if 'equal' in operator:
-            operand_str = '{}:Var{}'.format(neo4j_id, value)
+            operand_str = '{}:{}Type'.format(meta_event, value)
     elif field in ['cooccurs', 'causes']:
         if operator == 'equals':
-            operand_str = '{}.n = {}'.format(neo4j_id, value)
+            operand_str = '{}.n = {}'.format(meta_rel, value)
         elif operator == 'greater':
-            operand_str = '{}.n > {}'.format(neo4j_id, value)
+            operand_str = '{}.n > {}'.format(meta_rel, value)
         elif operator == 'less':
-            operand_str = '{}.n < {}'.format(neo4j_id, value)
+            operand_str = '{}.n < {}'.format(meta_rel, value)
 
     if operator.startswith('not_'):
         operand_str = 'NOT ' + operand_str

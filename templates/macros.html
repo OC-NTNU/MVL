@@ -1,128 +1,163 @@
 {% macro header(id, heading) -%}
-<!-- fix: offset of 50px, because the data-offset attribute doesn't work -->
-<div  id="{{id}}" class="container-fluid " style="min-height: 50px"></div>
-<div  class="container-fluid section-header glass-background">
-    <h1 class="">{{heading}}</h1>
-</div>
+    <!-- fix: offset of 50px, because the data-offset attribute doesn't work -->
+    <div id="{{ id }}" class="container-fluid " style="min-height: 50px"></div>
+    <div class="container-fluid section-header glass-background">
+        <h1 class="">{{ heading }}</h1>
+    </div>
 {%- endmacro %}
 
 
 {% macro event(id) -%}
-<div class="container-fluid section">
-    <div class="row">
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Query</h3>
+    <div class="container-fluid section">
+        <div class="row">
+            <div class="col-md-12 col-lg-10 col-lg-offset-1">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Query</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="builder-event-{{ id }}"></div>
+                        <div class="btn-group">
+                            <button id="reset-button-event-{{ id }}"
+                                    class="btn btn-danger reset">Reset
+                            </button>
+                            <button id="search-button-event-{{ id }}"
+                                    class="btn btn-primary search">Search
+                            </button>
+                        </div>
+
+                        <label class="checkbox-inline">
+                            <input id="checkbox-special-event-{{ id }}"
+                                   type="checkbox" value="">with specialisations
+                        </label>
+                        <label class="checkbox-inline">
+                            <input id="checkbox-general-event-{{ id }}"
+                                   type="checkbox" value="">with generalisations
+                        </label>
+                    </div>
                 </div>
-                <div class="panel-body">
-                    <div id="builder-event-{{id}}"></div>
-                    <div class="btn-group">
-                        <button id="reset-button-event-{{id}}" class="btn btn-danger reset">Reset</button>
-                        <button id="search-button-event-{{id}}" class="btn btn-primary search">Search</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-5 col-lg-offset-1">
+                <div id="types-panel-event-{{ id }}" class="hide">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Event types</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table id="types-table-event-{{ id }}"
+                                   class="table table-striped table-condensed"
+                                   cellspacing="0" width="100%"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-5">
+                <div id="instances-panel-event-{{ id }}" class="hide">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Event instances</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table id="instances-table-event-{{ id }}"
+                                   class="table table-striped table-condensed"
+                                   cellspacing="0" width="100%"></table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-6 col-lg-5 col-lg-offset-1">
-            <div id="types-panel-event-{{id}}" class="hide">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Event types</h3>
-                    </div>
-                    <div class="panel-body">
-                        <table id="types-table-event-{{id}}"
-                               class="table table-striped table-condensed"
-                               cellspacing="0" width="100%"></table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-5">
-            <div id="instances-panel-event-{{id}}" class="hide">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Event instances</h3>
-                    </div>
-                    <div class="panel-body">
-                        <table id="instances-table-event-{{id}}"
-                               class="table table-striped table-condensed"
-                               cellspacing="0" width="100%"></table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {%- endmacro %}
 
 
 
-{% macro relation(id) -%}
-<div class="container-fluid section">
-    <div class="row">
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Query</h3>
-                </div>
-                <div class="panel-body">
-                    <div id="builder-relation-{{id}}"></div>
-                    <div class="btn-group">
-                        <button id="reset-button-relation-{{id}}" class="btn btn-danger reset">Reset</button>
-                        <button id="search-button-relation-{{id}}" class="btn btn-primary search">Search</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div id="types-panel-relation-{{id}}" class="hide">
+{% macro relation() -%}
+    <div class="container-fluid section">
+        <div class="row">
+            <div class="col-md-12 col-lg-10 col-lg-offset-1">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Relation types</h3>
+                        <h3 class="panel-title">Query</h3>
                     </div>
                     <div class="panel-body">
-                        <table id="types-table-relation-{{id}}"
-                               class="table table-striped table-condensed"
-                               cellspacing="0" width="100%"></table>
+                        <div id="builder-relation"></div>
+                        <div class="btn-group">
+                            <button id="reset-button-relation"
+                                    class="btn btn-danger reset">Reset
+                            </button>
+                            <button id="search-button-relation"
+                                    class="btn btn-primary search">Search
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div id="instances-panel-relation-{{id}}" class="hide">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Relation instances</h3>
-                    </div>
-                    <div class="panel-body">
-                        <table id="instances-table-relation-{{id}}"
-                               class="table table-striped table-condensed"
-                               cellspacing="0" width="100%"></table>
+        <div class="row">
+            <div class="col-md-12 col-lg-10 col-lg-offset-1">
+                <div id="types-panel-relation" class="hide">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Relation types</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table id="types-table-relation"
+                                   class="table table-striped table-condensed"
+                                   cellspacing="0" width="100%"></table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div id="graph-panel-{{id}}" class="hide">
-                <div class="panel panel-default">
+        <div class="row">
+            <div class="col-md-12 col-lg-10 col-lg-offset-1">
+                <div id="instances-panel-relation" class="hide">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Relation instances</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table id="instances-table-relation"
+                                   class="table table-striped table-condensed"
+                                   cellspacing="0" width="100%"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 col-lg-10 col-lg-offset-1">
+
+                <div class="panel panel-default hide" id="graph-panel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Relation graph</h3>
+                        <ul class="list-inline panel-actions">
+                            <li><a href="#" id="panel-fullscreen" role="button"
+                                   title="Toggle fullscreen"><i
+                                    class="glyphicon glyphicon-resize-full"></i></a>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="panel-body">
+                    <div class="panel-body" id="graph-panel-body">
                         <div id="event-graph"></div>
                     </div>
                 </div>
+
+                <!--
+                <div id="graph-panel" class="hide">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Relation graph</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div id="event-graph"></div>
+                        </div>
+                    </div>
+                </div>
+                -->
             </div>
         </div>
     </div>
-</div>
 {%- endmacro %}

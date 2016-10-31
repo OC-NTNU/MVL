@@ -5,81 +5,86 @@ Cypher queries
 # TODO: remove hard-coded LIMIT cases
 # TODO: lower case relation name: lower?
 
-EVENT_TYPE_QUERY = '''
-MATCH
-    (ve:VarEvent)
+
+# -------------------------------------------------------------------------------
+# Event types query
+# -------------------------------------------------------------------------------
+
+# Motivation for use of UNWIND:
+#   1. Reuse of event type query for relation type query
+#   2. Proper sorting (in contrast with UNION)
+# cf. https://neo4j.com/blog/cypher-union-query-using-collect-clause/
+
+
+EVENT_TYPE_DIRECT = '''
+OPTIONAL MATCH
+    (v:VariableType) <-[:HAS_VAR]- (e:EventType)
 WHERE
-    {}
+    {where}
 WITH
-    ve.n AS eventCount,
+    collect(id(e)) as eventsDirect'''
+
+EVENT_TYPE_WITH_SPEC = '''
+OPTIONAL MATCH
+    (v:VariableType) <-[:TENTAILS_VAR*]-
+    (VariableType) <-[:HAS_VAR]- (e:EventType)
+WHERE
+    {where}
+WITH
+    eventsDirect,
+    collect(id(e)) as eventsSpec'''
+
+EVENT_TYPE_WITHOUT_SPEC = '''
+    , [] as eventsSpec'''
+
+EVENT_TYPE_WITH_GEN = '''
+OPTIONAL MATCH
+    (v:VariableType) -[:TENTAILS_VAR*]->
+    (VariableType) <-[:HAS_VAR]- (e:EventType)
+WHERE
+    {where}
+WITH
+	eventsDirect,
+	eventsSpec,
+	collect(id(e)) as eventsGen'''
+
+EVENT_TYPE_WITHOUT_GEN = '''
+	, [] as eventsGen'''
+
+EVENT_TYPE_UNWIND = '''
+UNWIND
+	eventsDirect + eventsSpec + eventsGen as eventId
+MATCH
+	(v:VariableType) <-[:HAS_VAR]- (e:EventType)
+WHERE
+	id(e) = eventId
+WITH
+    e.n AS eventCount,
     CASE
-        WHEN "VarIncrease" IN labels(ve) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve) THEN "Decrease"
+        WHEN "IncreaseType" IN labels(e) THEN "Increase"
+        WHEN "DecreaseType" IN labels(e) THEN "Decrease"
         ELSE "Change"
-    END AS event,
-    ve.subStr AS variable,
-    id(ve) AS nodeId
+    END AS eventType,
+    v.subStr AS variableType
 RETURN
     eventCount,
-    event,
-    variable,
-    nodeId
+    eventType,
+    variableType
     ORDER BY eventCount DESC
-    LIMIT 500
-'''
+    LIMIT 500'''
 
-# EVENT_INST_QUERY = '''
-# MATCH
-#     (ve:VarEvent) -[:INST]-> (e:Event) <-[:HAS_EVENT]- (s:Sentence)
-#     <-[:HAS_SENT]- (a:Article)
-# WHERE
-#     id(ve) IN {}
-# WITH
-#     CASE
-#         WHEN "VarIncrease" IN labels(ve) THEN "Increase"
-#         WHEN "VarDecrease" IN labels(ve) THEN "Decrease"
-#         ELSE "Change"
-#     END AS event,
-#     e.charOffsetBegin as eventBegin,
-#     e.charOffsetEnd as eventEnd,
-#     e.extractName as eventPattern,
-#     s.charOffsetBegin as sentBegin,
-#     s.sentChars as sentence,
-#     a.doi as doi,
-#     a.author as author,
-#     a.title as title,
-#     a.year as year,
-#     a.journal as journal,
-#     a.volume as volume
-# RETURN
-#     event,
-#     eventBegin,
-#     eventEnd,
-#     eventPattern,
-#     sentBegin,
-#     sentence,
-#     doi,
-#     author,
-#     title,
-#     year,
-#     journal,
-#     volume
-#     ORDER BY year DESC
-#     LIMIT 500
-# '''
+# -------------------------------------------------------------------------------
+# Event instances query
+# -------------------------------------------------------------------------------
 
 EVENT_INST_QUERY = '''
 MATCH
-    (ve:VarEvent) -[:INST]-> (e:Event) <-[:HAS_EVENT]- (s:Sentence)
-    <-[:HAS_SENT]- (a:Article)
+    (v:VariableType) <-[:HAS_VAR]- (e:{event_direction}Inst)
+    <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
 WHERE
-    id(ve) IN {}
+    v.subStr = "{variable_string}"
 WITH
-    CASE
-        WHEN "VarIncrease" IN labels(ve) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve) THEN "Decrease"
-        ELSE "Change"
-    END AS event,
+    "{event_direction}" as event,
     e.charOffsetBegin as eventBegin,
     e.charOffsetEnd as eventEnd,
     e.extractName as eventPattern,
@@ -102,30 +107,51 @@ RETURN
     LIMIT 500
 '''
 
+# ------------------------------------------------------------------------------
+# Relations type query
+# ------------------------------------------------------------------------------
+
 
 RELATION_TYPE_QUERY = '''
+{event_type_1_query}
+WITH
+    eventsDirect + eventsSpec + eventsGen AS eventTypeIds1
+{event_type_2_query}
+WITH
+    eventTypeIds1,
+    eventsDirect + eventsSpec + eventsGen AS eventTypeIds2
+UNWIND
+    eventTypeIds1 as id1
+MATCH
+    (v1:VariableType) <-[:HAS_VAR]- (et1:EventType)
+    -[r:{relation}]-{direction}
+    (et2:EventType) -[:HAS_VAR]-> (v2:VariableType)
 WHERE
-    {where}
+    {where} AND
+    id(et1) = id1 AND
+    id(et2) IN eventTypeIds2
 WITH
     CASE
-        WHEN "VarIncrease" IN labels(ve1) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve1) THEN "Decrease"
+        WHEN "IncreaseType" IN labels(et1) THEN "Increase"
+        WHEN "DecreaseType" IN labels(et1) THEN "Decrease"
         ELSE "Change"
     END AS event1,
-    ve1.subStr AS variable1,
-    id(ve1) AS nodeId1,
+    v1.subStr AS variable1,
+    id(et1) AS nodeId1,
 
     CASE
-        WHEN "VarIncrease" IN labels(ve2) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve2) THEN "Decrease"
+        WHEN "IncreaseType" IN labels(et2) THEN "Increase"
+        WHEN "DecreaseType" IN labels(et2) THEN "Decrease"
         ELSE "Change"
     END AS event2,
-    ve2.subStr AS variable2,
-    id(ve2) AS nodeId2,
+    v2.subStr AS variable2,
+    id(et2) AS nodeId2,
 
-    type(r) as relation,
-    r.n as relationCount,
-    id(r) as relationId
+    type(r) AS relation,
+    r.n AS relationCount,
+    id(r) AS relationId,
+    et1.n AS eventCount1,
+    et2.n AS eventCount2
 RETURN
     relationCount,
     relation,
@@ -135,44 +161,56 @@ RETURN
     variable2,
     nodeId1,
     nodeId2,
-    relationId
+    relationId,
+    eventCount1,
+    eventCount2
     ORDER BY relationCount DESC
-    LIMIT 500
-'''
+    LIMIT 500'''
 
 
-COOCCURS_TYPE_QUERY = '''
+
+# ------------------------------------------------------------------------------
+# Relations type query
+# ------------------------------------------------------------------------------
+
+
+# cooccurrence relation is non-directed
+COOCCURS_INST_MATCH = '''
 MATCH
-    (ve1:VarEvent) -[r:COOCCURS]- (ve2:VarEvent)
-''' + RELATION_TYPE_QUERY
-
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
+    <-[:HAS_EVENT]- (s:Sentence) -[:HAS_EVENT]->
+    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
+    (s) <-[:HAS_SENT]- (a:Article)
+    '''
 
 # causal relation is directed
-CAUSES_TYPE_QUERY = '''
+CAUSES_INST_MATCH = '''
 MATCH
-    (ve1:VarEvent) -[r:CAUSES]-> (ve2:VarEvent)
-''' + RELATION_TYPE_QUERY
-
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
+    <-[:HAS_CAUSE]- (:CausationInst) -[:HAS_EFFECT]->
+    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
+    (ei1) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
+    '''
 
 RELATION_INST_QUERY = '''
 WHERE
-    id(ve1) = {id1} AND id(ve2) = {id2}
+    v1.subStr = "{variable1}" AND v2.subStr = "{variable2}"
 WITH
     CASE
-        WHEN "VarIncrease" IN labels(ve1) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve1) THEN "Decrease"
+        WHEN "IncreaseInst" IN labels(ei1) THEN "Increase"
+        WHEN "DecreaseInst" IN labels(ei1) THEN "Decrease"
         ELSE "Change"
     END AS event1,
-    e1.charOffsetBegin as eventBegin1,
-    e1.charOffsetEnd as eventEnd1,
+    ei1.charOffsetBegin as eventBegin1,
+    ei1.charOffsetEnd as eventEnd1,
 
     CASE
-        WHEN "VarIncrease" IN labels(ve2) THEN "Increase"
-        WHEN "VarDecrease" IN labels(ve2) THEN "Decrease"
+        WHEN "IncreaseInst" IN labels(ei2) THEN "Increase"
+        WHEN "DecreaseInst" IN labels(ei2) THEN "Decrease"
         ELSE "Change"
     END AS event2,
-    e2.charOffsetBegin as eventBegin2,
-    e2.charOffsetEnd as eventEnd2,
+    ei2.charOffsetBegin as eventBegin2,
+    ei2.charOffsetEnd as eventEnd2,
 
     s.charOffsetBegin as sentBegin,
     s.sentChars as sentence,
@@ -196,18 +234,3 @@ RETURN
     LIMIT 500
 '''
 
-
-COOCCURS_INST_QUERY = '''
-MATCH
-    (ve1:VarEvent) -[:INST]-> (e1:Event) <-[:HAS_EVENT]- (s:Sentence)
-    -[:HAS_EVENT]-> (e2:Event) <-[:INST]- (ve2:VarEvent),
-    (s) <-[:HAS_SENT]- (a:Article)
-    ''' + RELATION_INST_QUERY
-
-
-CAUSES_INST_QUERY = '''
-MATCH
-    (ve1:VarEvent) -[:CAUSES]-> (ve2:VarEvent),
-    (ve1) -[:INST]-> (e1:Event) -[:HAS_EFFECT]-> (e2:Event) <-[:INST]- (ve2),
-    (e1:Event) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
-    ''' + RELATION_INST_QUERY
