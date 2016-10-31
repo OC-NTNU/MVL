@@ -26,14 +26,14 @@
                             </button>
                         </div>
 
-                                <label class="checkbox-inline">
-                                    <input id="checkbox-special-event-{{ id }}"
-                                           type="checkbox" value="">with specialisations
-                                </label>
-                                <label class="checkbox-inline">
-                                    <input id="checkbox-general-event-{{ id }}"
-                                           type="checkbox" value="">with generalisations
-                                </label>
+                        <label class="checkbox-inline">
+                            <input id="checkbox-special-event-{{ id }}"
+                                   type="checkbox" value="">with specialisations
+                        </label>
+                        <label class="checkbox-inline">
+                            <input id="checkbox-general-event-{{ id }}"
+                                   type="checkbox" value="">with generalisations
+                        </label>
                     </div>
                 </div>
             </div>
@@ -129,6 +129,23 @@
         </div>
         <div class="row">
             <div class="col-md-12 col-lg-10 col-lg-offset-1">
+
+                <div class="panel panel-default hide" id="graph-panel">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Relation graph</h3>
+                        <ul class="list-inline panel-actions">
+                            <li><a href="#" id="panel-fullscreen" role="button"
+                                   title="Toggle fullscreen"><i
+                                    class="glyphicon glyphicon-resize-full"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body" id="graph-panel-body">
+                        <div id="event-graph"></div>
+                    </div>
+                </div>
+
+                <!--
                 <div id="graph-panel" class="hide">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -139,6 +156,7 @@
                         </div>
                     </div>
                 </div>
+                -->
             </div>
         </div>
     </div>

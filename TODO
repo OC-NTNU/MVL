@@ -1,8 +1,7 @@
-* TODO: use arrows for direction in graph in the case of causal relations
-* TODO: for relations, AND/OR rules is not handled and makes no sense
-* TODO: Ranking on year: articles without a year should be at the bottom
-* TODO: resizable graph panel
-* TODO: pattern name in pop-up for relation instances
+Most important TODO items:
 
-* TODO: change "event" to "predicate" in code too?
+* TODO: revise help for causal relation and spec/gen options
+* TODO: for relations, multiple rules is not handled and makes no sense
+* TODO: Ranking on year: articles without a year should be at the bottom
+* TODO: pattern name in pop-up for relation instances
 * TODO: document counts instead of sentence counts?

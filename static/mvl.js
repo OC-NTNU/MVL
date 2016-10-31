@@ -535,7 +535,7 @@ var graph_options = {
         },
         scaling: {
             label: {
-                maxVisible: 14
+                maxVisible: 18
             }
         }
     },
@@ -551,7 +551,6 @@ var graph_options = {
         minVelocity: 0.75,
         solver: "repulsion"
     },
-    // FIXME: find nav images (see vis/dist/img/network/)
     interaction: {
         navigationButtons: true,
         keyboard: true
@@ -719,4 +718,28 @@ $.fn.scrollView = function () {
 
 $(document).ready(function () {
     $('[data-toggle="popover"]').popover();
+
+     //Toggle fullscreen
+    $("#panel-fullscreen").click(function (e) {
+        e.preventDefault();
+
+        var $this = $(this);
+
+        if ($this.children('i').hasClass('glyphicon-resize-full'))
+        {
+            $this.children('i').removeClass('glyphicon-resize-full');
+            $this.children('i').addClass('glyphicon-resize-small');
+            // FIXME: a hack to force resize of event-graph;
+            // should be solved in CSS somehow
+            $('#event-graph').css('height', '100%');
+        }
+        else if ($this.children('i').hasClass('glyphicon-resize-small'))
+        {
+            $this.children('i').removeClass('glyphicon-resize-small');
+            $this.children('i').addClass('glyphicon-resize-full');
+            $('#event-graph').css('height', '400px');
+        }
+        $(this).closest('.panel').toggleClass('panel-fullscreen');
+    });
+
 });
