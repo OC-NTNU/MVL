@@ -222,8 +222,8 @@ $('#types-table-event-2').DataTable({
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
-        'event': row.eventType,
-        'var': row.variableType
+        event_direction: row.eventType,
+        variable_string: row.variableType
     };
     $.ajax({
         url: $EVENT_INST_URL,
@@ -236,6 +236,7 @@ $('#types-table-event-2').DataTable({
         }
     });
 });
+
 
 // search buttons for event2 types
 $('#search-button-event-2').on('click', function () {
