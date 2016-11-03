@@ -172,9 +172,8 @@
                     between the two events, as indicated by the use of the verb
                     <i>causes</i>.
                     The current version of the Marine Variables Linker can not
-                    detect this relation yet, but future versions will enable
-                    searching for causal relations, correlations and feedbacks.
-                    <!-- TODO: change for causal relations -->
+                    detect other  relations yet, but future versions will enable
+                    searching for correlations and feedbacks too.
                 </p>
 
                 <h2>2. Searching for events</h2>
@@ -219,8 +218,9 @@
                 </p>
 
                 <p>By default, rules are combined by <i>conjunction</i> (that
-                    is, rule1 <b>and</b> rule 2 must match). If you want to combine
-                    rules by 
+                    is, rule1 <b>and</b> rule 2 must match). If you want to
+                    combine
+                    rules by
                     <i>disjunction</i> (that is, rule1 <b>or</b> rule 2 must
                     match), then
                     click on the blue OR button in the upper left corner.</p>
@@ -287,11 +287,29 @@
                     In the panel titled <i>Query</i> you can compose a query
                     to search for relations.
                     This works in the similar way as for events.
-                    A query consist of one or more rules, where each rule
-                    specifies conditions on the relation.
-                    <!-- TODO: change for causal relations -->
-                    Note that currently only co-occurrence relations are
-                    supported.
+                    A query typically consist of a single rule,
+                    although it is possible to use multiple rules where each
+                    one specifies conditions on the relation.
+                </p>
+                <p> The first kind of relation is <i>cooccurs</i>.
+                    This means that the two events co-occur in the same
+                    sentence.
+                    When two events often co-occur in a single sentence,
+                    they tend to be associated in some way.
+                    This may indicate a correlation between the two types of
+                    events. However, it may also indicate a meaningless
+                    cooincidence or -- especially in case of low frequency --
+                    the co-occurence may be purely by chance.
+                </p>
+                <p>
+                    The second kind of relation is <i>causes</i>.
+                    This means that the two events in teh same sentence
+                    are causally related, where one event is the cause and other
+                    the effect. That is, causal relations are directed.
+                    Causality must be described in the sentence, for example,
+                    by words like <i>causes</i>, <i>therefore</i> or
+                    <i>leads to</i>, etc.
+
                 </p>
 
                 <h4>Relation types</h4>
@@ -321,16 +339,27 @@
                 </ul>
                 Edges indicate relations between events, where the thickness
                 of the edge represents the relative frequency of the relation.
+                Causal relations have an arrow, pointing from cause to effect.
                 </p>
 
                 <p>
-                    Your view on the graph can be changed using the mouse:
+                    Your view on the graph can be changed using the green
+                    navigation icons at the bottom of the graph or
+                    by using the mouse:
                 <ul>
                     <li>Click and drag on nodes to move them around.</li>
                     <li>Click and drag on the cavas to move the whole graph.
                     </li>
-                    <li>Use the mouse wheel the zoom in or out.</li>
+                    <li>Use the mouse wheel to zoom in or out.</li>
                 </ul>
+                </p>
+
+                <p>
+                    Clicking on the <span class="glyphicon glyphicon-resize-full"></span>
+                    icon in the upper right corner of the graph panel will show
+                    the graph in full screen mode, while clicking the
+                    <span class="glyphicon glyphicon-resize-small"></span> icon will
+                    return it ti its orginal size.
                 </p>
 
                 <h4>Relation instances</h4>
