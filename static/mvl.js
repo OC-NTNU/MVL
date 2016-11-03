@@ -175,8 +175,9 @@ $('#types-table-event-1').DataTable({
     columns: [
         {data: 'eventCount', title: 'Count', width: "10%"},
         {data: 'eventType', title: 'Predicate', width: "20%"},
-        {data: 'variableType', title: 'Variable'}
-    ]
+        {data: 'variableType', title: 'Variable'},
+    ],
+    order: []
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
@@ -218,7 +219,8 @@ $('#types-table-event-2').DataTable({
         {data: 'eventCount', title: 'Count', width: "10%"},
         {data: 'eventType', title: 'Predicate', width: "20%"},
         {data: 'variableType', title: 'Variable'}
-    ]
+    ],
+    order: []
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
@@ -292,6 +294,7 @@ function showEventInstances(data, id) {
             {title: 'Year', width: "10%"},
             {title: 'Source', width: "10%", orderable: false}
         ],
+        order: [],
         // FIXME: this is legacy, but drawCallback is not called
         fnDrawCallback: function (oSettings) {
             $("[data-toggle=popover]").popover(
@@ -377,6 +380,7 @@ $('#types-table-relation').DataTable({
         {data: 'event2', title: 'Predicate2', width: "10%"},
         {data: 'variable2', title: 'Variable2'}
     ],
+    order: [],
     rowId: 'relationId'
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
@@ -416,6 +420,7 @@ $('#instances-table-relation').DataTable({
         {data: 'year', title: 'Year', width: "10%"},
         {data: 'source', title: 'Source', width: "10%", orderable: false}
     ],
+    order: [],
     // FIXME: this is legacy, but drawCallback is not called
     fnDrawCallback: function (oSettings) {
         $("[data-toggle=popover]").popover(
@@ -431,6 +436,7 @@ $('#instances-table-relation').DataTable({
 $('#search-button-relation').on('click', function () {
     $('#types-panel-relation').addClass('hide');
     $('#instances-panel-relation').addClass('hide');
+    $('#graph-panel').addClass('hide');
 
     var pay_load = {
         event_1: {
@@ -717,25 +723,25 @@ $.fn.scrollView = function () {
 
  */
 
+// see http://bootsnipp.com/snippets/6l3zr
+
 $(document).ready(function () {
     $('[data-toggle="popover"]').popover();
 
-     //Toggle fullscreen
+    //Toggle fullscreen
     $("#panel-fullscreen").click(function (e) {
         e.preventDefault();
 
         var $this = $(this);
 
-        if ($this.children('i').hasClass('glyphicon-resize-full'))
-        {
+        if ($this.children('i').hasClass('glyphicon-resize-full')) {
             $this.children('i').removeClass('glyphicon-resize-full');
             $this.children('i').addClass('glyphicon-resize-small');
             // FIXME: a hack to force resize of event-graph;
             // should be solved in CSS somehow
             $('#event-graph').css('height', '100%');
         }
-        else if ($this.children('i').hasClass('glyphicon-resize-small'))
-        {
+        else if ($this.children('i').hasClass('glyphicon-resize-small')) {
             $this.children('i').removeClass('glyphicon-resize-small');
             $this.children('i').addClass('glyphicon-resize-full');
             $('#event-graph').css('height', '400px');
