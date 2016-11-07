@@ -42,7 +42,7 @@ MATCH
     {event_pat}
 WHERE
     {event_where}
-WITH
+WITH DISTINCT
     {event_with}
 WITH
     varType.subStr as variable,
@@ -103,7 +103,7 @@ WHERE
     {event_1_where} AND
     {event_2_where} AND
     {rel_where}
-WITH
+WITH DISTINCT
     {event_1_with},
     {event_2_with},
     r

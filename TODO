@@ -1,8 +1,9 @@
 Most important TODO items:
 
-* TODO: double causal relations (problem in baleen)
 * TODO: revise help for causal relation and spec/gen options
 
+* TODO for large graphs, edges are undefined for n>200
+* TODO: flask config option for debug
 * TODO: update to latest version of js libs
 * TODO: warning message of number of results is limited
 * TODO: for relations, multiple rules is not handled and makes no sense
