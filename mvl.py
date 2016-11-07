@@ -110,8 +110,15 @@ def relation_types():
     # 1) Event 1: variable is diatom, Event 2: no restrictions;
     # 2) Event 2: no restrictions, Event 2: variable is diatom.
     # However, when using "id(et1) < id(et2)" only one of them will work!
+    #
+    # Problems:
+    # * LIMIT set in Cypher query is in fact halved this way
+    # * destroys the order
     rows = dict((r['relationId'], dict(r))
                 for r in records).values()
+
+    # previous hack destroys order, so we need to re-sort the rows
+    rows.sort(key=lambda e: e['relationCount'], reverse=True)
 
     response = dumps(rows, encoding='utf-8')
     return Response(response=response,

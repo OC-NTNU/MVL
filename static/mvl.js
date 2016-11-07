@@ -20,24 +20,25 @@ var event_options = {
                 'contains_string', 'not_contains_string',
                 'ends_with_string', 'not_ends_with_string'
             ],
-            description: 'restrict the value of variables'
+            description: 'restrict the value of variables',
+            placeholder: 'Define a variable...'
             //default_value: 'iron'
         },
         {
             id: 'event',
             input: 'select',
-            placeholder: 'Select an event type',
+            placeholder: 'Select an event type...',
             values: {
-                'Change': 'Change',
-                'Increase': 'Increase',
-                'Decrease': 'Decrease'
+                'change': 'change',
+                'increase': 'increase',
+                'decrease': 'decrease'
             },
             operators: ['equal', 'not_equal'],
             description: 'restrict the value of events'
         }
     ],
     default_filter: 'variable',
-    display_empty_filter: false,
+    //display_empty_filter: false,
     allow_empty: true,
     plugins: {
         //'bt-tooltip-errors': {delay: 100},
@@ -174,15 +175,15 @@ $('#types-table-event-1').DataTable({
     },
     columns: [
         {data: 'eventCount', title: 'Count', width: "10%"},
-        {data: 'eventType', title: 'Predicate', width: "20%"},
-        {data: 'variableType', title: 'Variable'},
+        {data: 'event', title: 'Predicate', width: "20%"},
+        {data: 'variable', title: 'Variable'},
     ],
     order: []
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
-        event_direction: row.eventType,
-        variable_string: row.variableType
+        event_direction: row.event,
+        variable_string: row.variable
     };
     $.ajax({
         url: $EVENT_INST_URL,
@@ -217,15 +218,15 @@ $('#types-table-event-2').DataTable({
     },
     columns: [
         {data: 'eventCount', title: 'Count', width: "10%"},
-        {data: 'eventType', title: 'Predicate', width: "20%"},
-        {data: 'variableType', title: 'Variable'}
+        {data: 'event', title: 'Predicate', width: "20%"},
+        {data: 'variable', title: 'Variable'}
     ],
     order: []
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
     var pay_load = {
-        event_direction: row.eventType,
-        variable_string: row.variableType
+        event_direction: row.event,
+        variable_string: row.variable
     };
     $.ajax({
         url: $EVENT_INST_URL,
@@ -254,21 +255,25 @@ $('#reset-button-event-2').on('click', function () {
 function searchEvent(id) {
     $('#types-panel-event-' + id).addClass('hide');
     $('#instances-panel-event-' + id).addClass('hide');
-    var pay_load = {
-        rules: $('#builder-event-' + id).queryBuilder('getRules'),
-        with_special: $('#checkbox-special-event-' + id).prop('checked'),
-        with_general: $('#checkbox-general-event-' + id).prop('checked')
-    }
-    $.ajax({
-        url: $EVENT_TYPE_URL,
-        type: 'POST',
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
-        data: JSON.stringify(pay_load),
-        complete: function (data, status) {
-            showEventTypes(data, id);
+    var valid = $('#builder-event-' + id).queryBuilder('validate');
+
+    if (valid) {
+        var pay_load = {
+            rules: $('#builder-event-' + id).queryBuilder('getRules'),
+            search_type: $('#search-type-' + id).val()
         }
-    })
+
+        $.ajax({
+            url: $EVENT_TYPE_URL,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(pay_load),
+            complete: function (data, status) {
+                showEventTypes(data, id);
+            }
+        })
+    }
 }
 
 
@@ -348,6 +353,7 @@ var relation_options = {
             description: 'search for causally related events'
         }
     ],
+    allow_groups: false,
     allow_empty: true,
     default_filter: 'cooccurs',
     display_empty_filter: false,
@@ -380,7 +386,7 @@ $('#types-table-relation').DataTable({
         {data: 'event2', title: 'Predicate2', width: "10%"},
         {data: 'variable2', title: 'Variable2'}
     ],
-    order: [],
+    order: [], //[[0, "desc"]],
     rowId: 'relationId'
 }).on('select', function (e, dt, type, indexes) {
     var row = dt.row(indexes[0]).data();
@@ -434,25 +440,40 @@ $('#instances-table-relation').DataTable({
 // search relation types
 
 $('#search-button-relation').on('click', function () {
-    $('#types-panel-relation').addClass('hide');
-    $('#instances-panel-relation').addClass('hide');
-    $('#graph-panel').addClass('hide');
+    resetRelationResults();
+
+    var valid1 = ($('#builder-event-1').queryBuilder('validate'));
+
+    if (valid1 === false) {
+        $('#alert-danger-relation').removeClass('hide');
+        $('#alert-danger-relation').text('Event 1 contains an error!');
+        return;
+    }
+
+    var valid2 = ($('#builder-event-2').queryBuilder('validate'));
+
+    if (valid2 === false) {
+        $('#alert-danger-relation').removeClass('hide');
+        $('#alert-danger-relation').text('Event 2 contains an error!');
+        return;
+    }
 
     var pay_load = {
         event_1: {
             rules: $('#builder-event-1').queryBuilder('getRules'),
-            with_special: $('#checkbox-special-event-1').prop('checked'),
-            with_general: $('#checkbox-general-event-1').prop('checked')
+            search_type: $('#search-type-1').val()
         },
         event_2: {
             rules: $('#builder-event-2').queryBuilder('getRules'),
-            with_special: $('#checkbox-special-event-1').prop('checked'),
-            with_general: $('#checkbox-general-event-1').prop('checked')
+            search_type: $('#search-type-2').val()
         },
         relation: {
             rules: $('#builder-relation').queryBuilder('getRules')
         }
     };
+
+    $('#alert-info-relation').removeClass('hide');
+    $('#alert-info-relation').text('Searching...');
 
     //console.log(rules);
     $.ajax({
@@ -462,6 +483,8 @@ $('#search-button-relation').on('click', function () {
         dataType: 'json',
         data: JSON.stringify(pay_load),
         complete: function (data, status) {
+            $('#alert-info-relation').addClass('hide');
+            $('#alert-info-relation').text('');
             showRelationTypes(data);
             showGraph(data)
         }
@@ -493,10 +516,24 @@ function showRelationInstances(data) {
 
 $('#reset-button-relation').on('click', function () {
     $('#builder-relation').queryBuilder('reset');
+    resetRelationResults();
+})
+
+function resetRelationResults() {
     $('#types-panel-relation').addClass('hide');
     $('#instances-panel-relation').addClass('hide');
     $('#graph-panel').addClass('hide');
-})
+    $('#alert-info-relation').addClass('hide');
+    $('#alert-warning-relation').addClass('hide');
+    $('#alert-danger-relation').addClass('hide');
+    $('#alert-info-graph').addClass('hide');
+    $('#alert-warning-graph').addClass('hide');
+    $('#alert-info-relation').text('');
+    $('#alert-warning-relation').text('');
+    $('#alert-danger-relation').text('');
+    $('#alert-info-graph').text('');
+    $('#alert-warning-graph-text').text('');
+}
 
 /***********************************************************************
  * Graph
@@ -508,19 +545,19 @@ var network;
 
 var graph_options = {
     groups: {
-        Change: {
+        change: {
             shape: 'diamond',
             color: {
                 background: '#5cb85c'
             }
         },
-        Increase: {
+        increase: {
             shape: 'triangle',
             color: {
                 background: '#d9534f'
             }
         },
-        Decrease: {
+        decrease: {
             shape: 'triangleDown',
             color: {
                 background: '#337ab7'
@@ -555,25 +592,32 @@ var graph_options = {
         /* "repulsion": {
          "nodeDistance": 100
          }, */
-        minVelocity: 0.75,
-        solver: "repulsion"
+        minVelocity: 1,
+        //solver: "repulsion"
     },
     interaction: {
         navigationButtons: true,
         keyboard: true
     }
+    //layout: {
+    //    improvedLayout: false
+    //}
+    // is not faster
 
 };
 
 
 function showGraph(data) {
     $('#graph-panel').removeClass('hide');
+    $('#alert-info-graph').text('Drawing graph. Please wait...');
+    $('#alert-info-graph').removeClass('hide');
 
     var records = data.responseJSON;
     var nodes = new vis.DataSet();
     var edges = new vis.DataSet();
+    var max_records = 200;
 
-    records.forEach(function (record) {
+    records.every(function (record, i, _records) {
         // add first node
         try {
             nodes.add({
@@ -616,6 +660,14 @@ function showGraph(data) {
         }
         catch (ex) { // edge already exists - should not happen?
         }
+
+        if (i < max_records) {
+            return true
+        } else {
+            $('#alert-warning-graph-text').text('Too many relations: showing only ' + max_records +
+                ' out of ' + records.length);
+            $('#alert-warning-graph').removeClass('hide');
+        }
     });
 
     var container = document.getElementById('event-graph');
@@ -634,7 +686,11 @@ function showGraph(data) {
         // select corresponding row in table with relation types
         var rowId = '#' + params.edges[0];
         $('#types-table-relation').DataTable().row(rowId).draw().show().draw(false).select()
-    })
+    });
+
+    network.on("stabilized", function (params) {
+        $('#alert-info-graph').addClass('hide');
+    });
 }
 
 
