@@ -10,68 +10,50 @@ Cypher queries
 # Event types query
 # -------------------------------------------------------------------------------
 
-# Motivation for use of UNWIND:
-#   1. Reuse of event type query for relation type query
-#   2. Proper sorting (in contrast with UNION)
-# cf. https://neo4j.com/blog/cypher-union-query-using-collect-clause/
+EVENT_TYPE_DIRECT_PAT = '''
+    (v{i}:VariableType) <-[:HAS_VAR]- (e{i}:EventType)'''
+
+EVENT_TYPE_DIRECT_WITH = '''
+    v{i} as varType{i},
+    e{i} as eventType{i}'''
+
+EVENT_TYPE_SPEC_PAT = '''
+    (v{i}:VariableType) <-[:TENTAILS_VAR*0..{max_length}]- (vs{i}:VariableType)
+    <-[:HAS_VAR]- (e{i}:EventType)'''
+
+EVENT_TYPE_SPEC_WITH = '''
+    vs{i} as varType{i},
+    e{i} as eventType{i}'''
+
+EVENT_TYPE_GEN_PAT = '''
+    (v{i}:VariableType) -[:TENTAILS_VAR*0..{max_length}]-> (vg{i}:VariableType)
+    <-[:HAS_VAR]- (e{i}:EventType)'''
+
+EVENT_TYPE_GEN_WITH = '''
+    vg{i} as varType{i},
+    e{i} as eventType{i}'''
+
+EVENT_TYPE_REL_PAT = '''
+    (e1) -[r:{relation}]-{direction} (e2)'''
 
 
-EVENT_TYPE_DIRECT = '''
-OPTIONAL MATCH
-    (v:VariableType) <-[:HAS_VAR]- (e:EventType)
-WHERE
-    {where}
-WITH
-    collect(id(e)) as eventsDirect'''
-
-EVENT_TYPE_WITH_SPEC = '''
-OPTIONAL MATCH
-    (v:VariableType) <-[:TENTAILS_VAR*]-
-    (VariableType) <-[:HAS_VAR]- (e:EventType)
-WHERE
-    {where}
-WITH
-    eventsDirect,
-    collect(id(e)) as eventsSpec'''
-
-EVENT_TYPE_WITHOUT_SPEC = '''
-    , [] as eventsSpec'''
-
-EVENT_TYPE_WITH_GEN = '''
-OPTIONAL MATCH
-    (v:VariableType) -[:TENTAILS_VAR*]->
-    (VariableType) <-[:HAS_VAR]- (e:EventType)
-WHERE
-    {where}
-WITH
-	eventsDirect,
-	eventsSpec,
-	collect(id(e)) as eventsGen'''
-
-EVENT_TYPE_WITHOUT_GEN = '''
-	, [] as eventsGen'''
-
-EVENT_TYPE_UNWIND = '''
-UNWIND
-	eventsDirect + eventsSpec + eventsGen as eventId
+EVENT_TYPE_QUERY = '''
 MATCH
-	(v:VariableType) <-[:HAS_VAR]- (e:EventType)
+    {event_pat}
 WHERE
-	id(e) = eventId
+    {event_where}
 WITH
-    e.n AS eventCount,
-    CASE
-        WHEN "IncreaseType" IN labels(e) THEN "Increase"
-        WHEN "DecreaseType" IN labels(e) THEN "Decrease"
-        ELSE "Change"
-    END AS eventType,
-    v.subStr AS variableType
+    {event_with}
+WITH
+    varType.subStr as variable,
+    eventType.n AS eventCount,
+    eventType.direction as event
 RETURN
     eventCount,
-    eventType,
-    variableType
+    event,
+    variable
     ORDER BY eventCount DESC
-    LIMIT 500'''
+    LIMIT {limit}'''
 
 # -------------------------------------------------------------------------------
 # Event instances query
@@ -79,10 +61,11 @@ RETURN
 
 EVENT_INST_QUERY = '''
 MATCH
-    (v:VariableType) <-[:HAS_VAR]- (e:{event_direction}Inst)
+    (v:VariableType) <-[:HAS_VAR]- (e:EventInst)
     <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
 WHERE
-    v.subStr = "{variable_string}"
+    v.subStr = "{variable_string}" AND
+    e.direction = "{event_direction}"
 WITH
     "{event_direction}" as event,
     e.charOffsetBegin as eventBegin,
@@ -104,54 +87,40 @@ RETURN
     year,
     citation
     ORDER BY year DESC
-    LIMIT 500
+    LIMIT {limit}
 '''
 
 # ------------------------------------------------------------------------------
-# Relations type query
+# Relation types query
 # ------------------------------------------------------------------------------
 
-
-RELATION_TYPE_QUERY = '''
-{event_type_1_query}
-WITH
-    eventsDirect + eventsSpec + eventsGen AS eventTypeIds1
-{event_type_2_query}
-WITH
-    eventTypeIds1,
-    eventsDirect + eventsSpec + eventsGen AS eventTypeIds2
-UNWIND
-    eventTypeIds1 as id1
+REL_TYPE_QUERY = '''
 MATCH
-    (v1:VariableType) <-[:HAS_VAR]- (et1:EventType)
-    -[r:{relation}]-{direction}
-    (et2:EventType) -[:HAS_VAR]-> (v2:VariableType)
+    {event_1_pat},
+    {event_2_pat},
+    {relation_pat}
 WHERE
-    {where} AND
-    id(et1) = id1 AND
-    id(et2) IN eventTypeIds2
+    {event_1_where} AND
+    {event_2_where} AND
+    {rel_where}
 WITH
-    CASE
-        WHEN "IncreaseType" IN labels(et1) THEN "Increase"
-        WHEN "DecreaseType" IN labels(et1) THEN "Decrease"
-        ELSE "Change"
-    END AS event1,
-    v1.subStr AS variable1,
-    id(et1) AS nodeId1,
+    {event_1_with},
+    {event_2_with},
+    r
+WITH
+    varType1.subStr AS variable1,
+    eventType1.direction as event1,
+    eventType1.n AS eventCount1,
+    id(eventType1) AS nodeId1,
 
-    CASE
-        WHEN "IncreaseType" IN labels(et2) THEN "Increase"
-        WHEN "DecreaseType" IN labels(et2) THEN "Decrease"
-        ELSE "Change"
-    END AS event2,
-    v2.subStr AS variable2,
-    id(et2) AS nodeId2,
+    varType2.subStr AS variable2,
+    eventType2.direction as event2,
+    eventType2.n AS eventCount2,
+    id(eventType2) AS nodeId2,
 
     type(r) AS relation,
     r.n AS relationCount,
-    id(r) AS relationId,
-    et1.n AS eventCount1,
-    et2.n AS eventCount2
+    id(r) AS relationId
 RETURN
     relationCount,
     relation,
@@ -165,50 +134,40 @@ RETURN
     eventCount1,
     eventCount2
     ORDER BY relationCount DESC
-    LIMIT 500'''
-
-
+    LIMIT {limit}'''
 
 # ------------------------------------------------------------------------------
-# Relations type query
+# Relation instances query
 # ------------------------------------------------------------------------------
-
 
 # cooccurrence relation is non-directed
 COOCCURS_INST_MATCH = '''
 MATCH
-    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:EventInst)
     <-[:HAS_EVENT]- (s:Sentence) -[:HAS_EVENT]->
-    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
+    (ei2:EventInst) -[:HAS_VAR]-> (v2:VariableType),
     (s) <-[:HAS_SENT]- (a:Article)
     '''
 
 # causal relation is directed
 CAUSES_INST_MATCH = '''
 MATCH
-    (v1:VariableType) <-[:HAS_VAR]- (ei1:{event1}Inst)
+    (v1:VariableType) <-[:HAS_VAR]- (ei1:EventInst)
     <-[:HAS_CAUSE]- (:CausationInst) -[:HAS_EFFECT]->
-    (ei2:{event2}Inst) -[:HAS_VAR]-> (v2:VariableType),
+    (ei2:EventInst) -[:HAS_VAR]-> (v2:VariableType),
     (ei1) <-[:HAS_EVENT]- (s:Sentence) <-[:HAS_SENT]- (a:Article)
     '''
 
 RELATION_INST_QUERY = '''
 WHERE
-    v1.subStr = "{variable1}" AND v2.subStr = "{variable2}"
+    v1.subStr = "{variable1}" AND
+    v2.subStr = "{variable2}"
 WITH
-    CASE
-        WHEN "IncreaseInst" IN labels(ei1) THEN "Increase"
-        WHEN "DecreaseInst" IN labels(ei1) THEN "Decrease"
-        ELSE "Change"
-    END AS event1,
+    ei1.direction as event1,
     ei1.charOffsetBegin as eventBegin1,
     ei1.charOffsetEnd as eventEnd1,
 
-    CASE
-        WHEN "IncreaseInst" IN labels(ei2) THEN "Increase"
-        WHEN "DecreaseInst" IN labels(ei2) THEN "Decrease"
-        ELSE "Change"
-    END AS event2,
+    ei2.direction as event2,
     ei2.charOffsetBegin as eventBegin2,
     ei2.charOffsetEnd as eventEnd2,
 
@@ -231,6 +190,5 @@ RETURN
     year,
     citation
     ORDER BY year DESC
-    LIMIT 500
+    LIMIT {limit}
 '''
-
