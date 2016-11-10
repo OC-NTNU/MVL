@@ -1,6 +1,8 @@
 {% extends "bootstrap/base.html" %}
 {% import "macros.html" as macros %}
 
+<!-- TODO 2: update to latest version of js libs -->
+
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet"
@@ -140,9 +142,9 @@
 
                 <blockquote>
                     <samp>
-                        <span class="Increase">The increase of greenhouse gasses</span>
+                        <span class="increase">The increase of greenhouse gasses</span>
                         causes
-                        <span class="Decrease">a decline of Artic sea ice</span>.
+                        <span class="decrease">a decline of Artic sea ice</span>.
                     </samp>
                 </blockquote>
 
@@ -164,16 +166,15 @@
                     If two events tend to co-occur frequently in text,
                     this usually indicate that there exists some meaningful
                     connection between them.
-                </p>
-
-                <p>
                     In the above example, there is in fact a <b>causal
                     relation</b>
                     between the two events, as indicated by the use of the verb
                     <i>causes</i>.
-                    The current version of the Marine Variables Linker can not
-                    detect other relations yet, but future versions will enable
-                    searching for correlations and feedbacks too.
+                </p>
+                <p>
+                    The current version of the Marine Variables Linker allows you to
+                    search for both co-occurrence and causal relations between events.
+                    Future versions will add searching for correlations and feedbacks.
                 </p>
 
                 <h2>2. Searching for events</h2>
@@ -267,6 +268,32 @@
 
                 <p>Click on the <i>Reset</i> button to start a new search. </p>
 
+
+                <h4>Searching with specialisations and generalisations</h4>
+
+                <p>
+                    The drop down next to the <i>Search</i> button offers three choices:
+
+                <ul>
+                    <li><i>exact only</i>: This means that only
+                        events exactly matching the search criteria will be returned.
+                        This is the default setting.
+                    </li>
+                    <li><i>with specialisations</i>: This means that also more specific types
+                        of events will be returned. For example, if the variable is <i>sea ice</i>,
+                        then the search result includes more specific types such as
+                        <i>winter sea ice</i>, <i>Artic sea ice</i> and
+                        <i>frost, snow and baltic sea ice</i>.
+                    </li><li><i>with generalisations</i>: This means that also more general types
+                        of events will be returned. For example, if the variable is <i>summer Arctic sea ice</i>,
+                        then the search result includes more general types such as
+                        <i>Arctic sea ice</i>, <i>sea ice</i> and
+                        <i></i>ice</i>.
+                    </li>
+                </ul>
+                <!-- TODO 2: explain difference with "contains words"? -->
+                </p>
+
             </div>
 
             <div class="col-md-6 col-lg-5">
@@ -303,7 +330,7 @@
                 </p>
                 <p>
                     The second kind of relation is <i>causes</i>.
-                    This means that the two events in teh same sentence
+                    This means that the two events in a sentence
                     are causally related, where one event is the cause and other
                     the effect. That is, causal relations are directed.
                     Causality must be described in the sentence, for example,
@@ -340,6 +367,7 @@
                 Edges indicate relations between events, where the thickness
                 of the edge represents the relative frequency of the relation.
                 Causal relations have an arrow, pointing from cause to effect.
+                The size of a node indicates the relative frequency of the event.
                 </p>
 
                 <p>
@@ -383,6 +411,19 @@
                 <p>
                     Click on the <i>Reset</i> button to start a new search.
                 </p>
+
+                <h4>Open-ended relation search</h4>
+
+                <p>
+                    Suppose you are interested in the effects of increased temperature.
+                    In that case, you have to define Event 1 as an increase of the variable
+                    <i>temperature</i>, while leaving Event 2 open, and then search
+                    for causal relations.
+                    Note that you have to delete all rules for Event 2 to leave it
+                    completely open.
+                    This search will show all events caused by increased temperature.
+                </p>
+
             </div>
         </div>
     </div>
