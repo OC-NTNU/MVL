@@ -270,6 +270,7 @@ function searchEvent(id) {
             dataType: 'json',
             data: JSON.stringify(pay_load),
             complete: function (data, status) {
+                // TODO 2: warning message if number of results is limited
                 showEventTypes(data, id);
             }
         })
@@ -289,6 +290,7 @@ function showEventTypes(data, id) {
 
 
 function showEventInstances(data, id) {
+    // TODO 3: Ranking on year: articles without a year should be at the bottom
     //console.log(data.responseText);
     $('#instances-panel-event-' + id).removeClass('hide').scrollView();
     var table = $('#instances-table-event-' + id).DataTable({
@@ -300,7 +302,7 @@ function showEventInstances(data, id) {
             {title: 'Source', width: "10%", orderable: false}
         ],
         order: [],
-        // FIXME: this is legacy, but drawCallback is not called
+        // TODO 3: this is legacy, but drawCallback is not called
         fnDrawCallback: function (oSettings) {
             $("[data-toggle=popover]").popover(
                 {
@@ -327,6 +329,7 @@ function resetEvent(id) {
  ***********************************************************************/
 
 // query-builder options for relations
+// TODO 3: for relations, multiple rules is not handled and makes no sense
 
 var relation_options = {
     filters: [
@@ -427,7 +430,7 @@ $('#instances-table-relation').DataTable({
         {data: 'source', title: 'Source', width: "10%", orderable: false}
     ],
     order: [],
-    // FIXME: this is legacy, but drawCallback is not called
+    // TODO 3: this is legacy, but drawCallback is not called
     fnDrawCallback: function (oSettings) {
         $("[data-toggle=popover]").popover(
             {
@@ -453,8 +456,8 @@ $('#search-button-relation').on('click', function () {
     var valid2 = ($('#builder-event-2').queryBuilder('validate'));
 
     if (valid2 === false) {
-        $('#alert-danger-relation').removeClass('hide');
         $('#alert-danger-relation').text('Event 2 contains an error!');
+        $('#alert-danger-relation').removeClass('hide');
         return;
     }
 
@@ -483,10 +486,17 @@ $('#search-button-relation').on('click', function () {
         dataType: 'json',
         data: JSON.stringify(pay_load),
         complete: function (data, status) {
+            // TODO 1: generate warning message for empty result
             $('#alert-info-relation').addClass('hide');
             $('#alert-info-relation').text('');
-            showRelationTypes(data);
-            showGraph(data)
+
+            if (data.length > 0) {
+                showRelationTypes(data);
+                showGraph(data)
+            } else {
+                $('#alert-danger-relation').text('Search has no results!');
+                $('#alert-danger-relation').removeClass('hide');
+            }
         }
     })
 })
@@ -539,7 +549,7 @@ function resetRelationResults() {
  * Graph
  ***********************************************************************/
 
-// TODO: remove global var network?
+// TODO 3: remove global var network?
 var network;
 
 
@@ -584,7 +594,7 @@ var graph_options = {
         }
     },
     interaction: {
-        // TODO these options have no effect
+        // TODO 2: these options have no effect?
         hoverConnectedEdges: true,
         selectConnectedEdges: false
     },
@@ -608,6 +618,7 @@ var graph_options = {
 
 
 function showGraph(data) {
+    // TODO 2: for large graphs, edges are undefined for n>200
     $('#graph-panel').removeClass('hide');
     $('#alert-info-graph').text('Drawing graph. Please wait...');
     $('#alert-info-graph').removeClass('hide');
@@ -677,7 +688,7 @@ function showGraph(data) {
         edges: edges
     };
 
-    // TODO: update graph instead of creating new instance?
+    // TODO 3: update graph instead of creating new instance?
     network = new vis.Network(container, graphData, graph_options);
 
     network.on("selectEdge", function (params) {
@@ -793,7 +804,7 @@ $(document).ready(function () {
         if ($this.children('i').hasClass('glyphicon-resize-full')) {
             $this.children('i').removeClass('glyphicon-resize-full');
             $this.children('i').addClass('glyphicon-resize-small');
-            // FIXME: a hack to force resize of event-graph;
+            // TODO 3: a hack to force resize of event-graph;
             // should be solved in CSS somehow
             $('#event-graph').css('height', '100%');
         }
