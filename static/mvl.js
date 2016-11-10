@@ -505,7 +505,7 @@ $('#search-button-relation').on('click', function () {
             $('#alert-info-relation').addClass('hide');
             $('#alert-info-relation').text('');
 
-            if (data.length > 0) {
+            if (data.responseJSON.length > 0) {
                 showRelationTypes(data);
                 showGraph(data)
             } else {
