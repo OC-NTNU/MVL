@@ -199,12 +199,14 @@ $('#types-table-event-1').DataTable({
 
 // search buttons for event1 types
 $('#search-button-event-1').on('click', function () {
+    resetEventResults(1)
     searchEvent(1)
 });
 
 // reset button for event1 types & instances
 $('#reset-button-event-1').on('click', function () {
-    resetEvent(1);
+    $('#builder-event-1').queryBuilder('reset');
+    resetEventResults(1);
 })
 
 
@@ -243,12 +245,14 @@ $('#types-table-event-2').DataTable({
 
 // search buttons for event2 types
 $('#search-button-event-2').on('click', function () {
+    resetEventResults(2);
     searchEvent(2)
 });
 
 // reset button for event2 types & instances
 $('#reset-button-event-2').on('click', function () {
-    resetEvent(2);
+    $('#builder-event-2').queryBuilder('reset');
+    resetEventResults(2);
 })
 
 
@@ -270,8 +274,14 @@ function searchEvent(id) {
             dataType: 'json',
             data: JSON.stringify(pay_load),
             complete: function (data, status) {
+                console.log(data);
                 // TODO 2: warning message if number of results is limited
-                showEventTypes(data, id);
+                if (data.responseJSON.length > 0) {
+                    showEventTypes(data, id);
+                } else {
+                    $('#alert-warning-event-' + id).text('Search has no results!');
+                    $('#alert-warning-event-' + id).removeClass('hide');
+                }
             }
         })
     }
@@ -317,10 +327,16 @@ function showEventInstances(data, id) {
 }
 
 
-function resetEvent(id) {
-    $('#builder-event-' + id).queryBuilder('reset');
+function resetEventResults(id) {
     $('#types-panel-event-' + id).addClass('hide');
     $('#instances-panel-event-' + id).addClass('hide');
+
+    $('#alert-info-event-' + id).addClass('hide');
+    $('#alert-warning-event-' + id).addClass('hide');
+    $('#alert-danger-event-' + id).addClass('hide');
+    $('#alert-info-event-' + id).text('');
+    $('#alert-warning-event-' + id).text('');
+    $('#alert-danger-event-' + id).text('');
 }
 
 
@@ -486,7 +502,6 @@ $('#search-button-relation').on('click', function () {
         dataType: 'json',
         data: JSON.stringify(pay_load),
         complete: function (data, status) {
-            // TODO 1: generate warning message for empty result
             $('#alert-info-relation').addClass('hide');
             $('#alert-info-relation').text('');
 
@@ -494,8 +509,8 @@ $('#search-button-relation').on('click', function () {
                 showRelationTypes(data);
                 showGraph(data)
             } else {
-                $('#alert-danger-relation').text('Search has no results!');
-                $('#alert-danger-relation').removeClass('hide');
+                $('#alert-warning-relation').text('Search has no results!');
+                $('#alert-warning-relation').removeClass('hide');
             }
         }
     })
