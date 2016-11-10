@@ -1,3 +1,6 @@
+# TODO 2: flask config option for debug
+
+
 from flask import Flask, render_template, request, Response
 from flask_bootstrap import Bootstrap
 from json import dumps
@@ -62,8 +65,9 @@ def search():
 
 @app.route('/event-types', methods=['POST'])
 def event_types():
+    # TODO 3: document counts instead of sentence counts?
     rows = get_event_types(**request.get_json())
-    # TODO: serialize to Json from generator instead of list
+    # TODO 3: serialize to Json from generator instead of list
     rows = [dict(r) for r in rows]
     response = dumps(rows, encoding='utf-8')
     return Response(response=response,
@@ -101,7 +105,7 @@ def relation_types():
     pay_load = request.get_json()
     records = get_relation_types(**pay_load)
 
-    # FIXME relationId hack
+    # TODO 1: fix relationId hack
     # This is to prevent the same COOCCURS relation,
     # which is non-directed, to show up twice in the returned relation types.
     # I can not find a way to express this in a Cypher query.
@@ -132,6 +136,7 @@ def relation_inst():
     records = get_relation_inst(**pay_load)
     rows = []
 
+    # TODO 2:  causal pattern name in pop-up for relation instances
     for inst in records:
         # create sentence with mark-up for events
         stand_off = [(inst['eventBegin1'] - inst['sentBegin'],

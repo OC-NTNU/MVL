@@ -2,8 +2,7 @@
 Cypher queries
 """
 
-# TODO: remove hard-coded LIMIT cases
-# TODO: lower case relation name: lower?
+# TODO 2: remove all hard-coded LIMIT cases
 
 
 # -------------------------------------------------------------------------------

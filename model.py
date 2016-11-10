@@ -36,7 +36,7 @@ def run_query(query):
     except CypherError as err:
         log.error(err)
         raise err
-        # TODO: raised exception should ultimately results in a 500 response
+        # TODO 3: raised exception should ultimately results in a 500 response
     finally:
         session.close()
 
@@ -67,7 +67,7 @@ def get_event_inst(event_direction, variable_string):
     return run_query(query)
 
 
-# TODO seting of max_length
+# TODO 2: seting of max_length
 def build_event_type_pattern(search_type, i=None, max_length=3):
     i = '' if i is None else str(i)
 
@@ -116,7 +116,7 @@ def get_relation_types(event_1, event_2, relation):
     event_1_with = build_with_clause(event_1['search_type'], 1)
     event_2_with = build_with_clause(event_2['search_type'], 2)
 
-    # FIXME hack related to the one in  mvl.relation_types()
+    # TODO 1: hack related to the one in  mvl.relation_types()
     relation_type = relation['rules']['rules'][0]['id'].upper()
     if relation_type == 'COOCCURS':
         limit = 900
@@ -155,8 +155,7 @@ def get_relation_inst(event1, event2, variable1, variable2, relation):
 
 # parse query-builder rules
 
-# TODO: error handling (e.g. unknown operator)
-
+# TODO 3: error handling (e.g. unknown operator)
 
 def parse_group(rules, i=None):
     """
@@ -182,7 +181,7 @@ def parse_group(rules, i=None):
     return operands_str or 'TRUE'
 
 
-# TODO: escape special symbols in regex
+# TODO 3: escape special symbols in regex
 
 def parse_rule(rule, i=None):
     """
@@ -197,6 +196,8 @@ def parse_rule(rule, i=None):
     operand_str = None
     field, operator, type, value = rule['field'], rule['operator'], \
                                    rule['type'], rule['value']
+    value = value.strip()
+
     if field == 'variable':
         if 'equal' in operator:
             operand_str = '{}.subStr = "{}"'.format(meta_var, value)
